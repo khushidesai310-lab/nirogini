@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tell us about yourself — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.onboard-shell {
+  min-height: 100vh; display: flex; align-items: center;
+  justify-content: center; padding: 24px;
+  background: linear-gradient(135deg, #FDF8F5, #FEF3EE);
+}
+.onboard-card {
+  width: 100%; max-width: 520px;
+  background: white; border-radius: 24px;
+  padding: 40px 36px; box-shadow: var(--shadow-lg);
+  animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.step-indicator {
+  display: flex; gap: 8px; margin-bottom: 28px;
+}
+.step-dot {
+  height: 6px; border-radius: 4px; background: var(--border);
+  transition: all 0.3s; flex: 1;
+}
+.step-dot.active { background: var(--coral); }
+.step-dot.done { background: var(--mint); }
+.onboard-emoji { font-size: 2.5rem; margin-bottom: 12px; }
+.onboard-title { font-size: 1.4rem; margin-bottom: 6px; }
+.onboard-sub { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 28px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.option-btn {
+  padding: 14px 12px; border: 2px solid var(--border);
+  border-radius: 14px; background: var(--surface-2);
+  cursor: pointer; text-align: center; transition: all 0.2s;
+  font-size: 0.9rem; font-weight: 500;
+}
+.option-btn:hover { border-color: var(--coral); background: rgba(233,97,79,0.05); }
+.option-btn.selected { border-color: var(--coral); background: rgba(233,97,79,0.08); color: var(--coral); font-weight: 600; }
+.skip-link { text-align: center; margin-top: 16px; font-size: 0.85rem; color: var(--text-dim); }
+.skip-link a { color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="onboard-shell">
+  <div class="onboard-card">
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot0"></div>
+      <div class="step-dot" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+    </div>
+
+    <div id="step0">
+      <div class="onboard-emoji">👋</div>
+      <div class="onboard-title" id="s0title">Hi there! Tell us a little about yourself</div>
+      <div class="onboard-sub" id="s0sub">This helps us make Nirogini truly yours</div>
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="field">
+          <label id="ageLabel">Your age</label>
+          <input type="number" id="age" placeholder="e.g. 45" min="18" max="80">
+        </div>
+        <div class="field">
+          <label id="cityLabel">Your city</label>
+          <select id="city">
+            <option value="">Select city</option>
+            <option value="mumbai">Mumbai</option>
+            <option value="delhi">Delhi</option>
+            <option value="bangalore">Bangalore</option>
+            <option value="ahmedabad">Ahmedabad</option>
+            <option value="kolkata">Kolkata</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label id="heightLabel">Height (cm)</label>
+          <input type="number" id="height" placeholder="e.g. 158">
+        </div>
+        <div class="field">
+          <label id="weightLabel">Weight (kg)</label>
+          <input type="number" id="weight" placeholder="e.g. 62">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextStep(0)">Continue →</button>
+    </div>
+
+    <div id="step1" style="display:none;">
+      <div class="onboard-emoji">💊</div>
+      <div class="onboard-title" id="s1title">Any health conditions we should know about?</div>
+      <div class="onboard-sub" id="s1sub">This is completely private — it helps us give you better advice</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;" id="conditionsGrid">
+        <div class="option-btn" data-val="None" onclick="toggleCondition(this)">None / Healthy</div>
+        <div class="option-btn" data-val="Diabetes" onclick="toggleCondition(this)">Diabetes</div>
+        <div class="option-btn" data-val="Hypertension" onclick="toggleCondition(this)">High BP</div>
+        <div class="option-btn" data-val="Thyroid" onclick="toggleCondition(this)">Thyroid</div>
+        <div class="option-btn" data-val="PCOS" onclick="toggleCondition(this)">PCOS</div>
+        <div class="option-btn" data-val="Arthritis" onclick="toggleCondition(this)">Arthritis</div>
+        <div class="option-btn" data-val="Heart condition" onclick="toggleCondition(this)">Heart condition</div>
+        <div class="option-btn" data-val="Menopause" onclick="toggleCondition(this)">Menopause</div>
+      </div>
+      <button class="btn-primary" onclick="nextStep(1)">Continue →</button>
+    </div>
+
+    <div id="step2" style="display:none;">
+      <div class="onboard-emoji">👨‍👩‍👧‍👦</div>
+      <div class="onboard-title" id="s2title">Who do you want to stay healthy for?</div>
+      <div class="onboard-sub" id="s2sub">Nirogini is not just for you — it's for your whole family</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;" id="familyGrid">
+        <div class="option-btn" data-val="Husband" onclick="toggleFamily(this)">Husband 💑</div>
+        <div class="option-btn" data-val="Kids" onclick="toggleFamily(this)">Kids 👶</div>
+        <div class="option-btn" data-val="Parents" onclick="toggleFamily(this)">Parents 👴👵</div>
+        <div class="option-btn" data-val="Myself" onclick="toggleFamily(this)">Myself 💪</div>
+        <div class="option-btn" data-val="Everyone" onclick="toggleFamily(this)">Everyone 🏠</div>
+      </div>
+      <button class="btn-primary" onclick="nextStep(2)">Continue →</button>
+    </div>
+
+    <div id="step3" style="display:none;">
+      <div class="onboard-emoji">🎯</div>
+      <div class="onboard-title" id="s3title">What matters most to you right now?</div>
+      <div class="onboard-sub" id="s3sub">We'll focus your daily plan around this</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;" id="goalGrid">
+        <div class="option-btn" data-val="Stay healthy" onclick="selectGoal(this)">🌿 Stay healthy and prevent illness</div>
+        <div class="option-btn" data-val="Lose weight" onclick="selectGoal(this)">⚖️ Manage my weight</div>
+        <div class="option-btn" data-val="Manage condition" onclick="selectGoal(this)">💊 Manage an existing health condition</div>
+        <div class="option-btn" data-val="More energy" onclick="selectGoal(this)">⚡ Have more energy for my family</div>
+        <div class="option-btn" data-val="Understand health" onclick="selectGoal(this)">📚 Understand my health better</div>
+        <div class="option-btn" data-val="Menopause support" onclick="selectGoal(this)">🌙 Navigate menopause with confidence</div>
+      </div>
+      <button class="btn-primary" id="finishBtn" onclick="finish()">Let's go! 🌸</button>
+    </div>
+
+    <div class="skip-link" id="skipLink">
+      <a href="dashboard.html">Skip for now →</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+let currentStep = 0;
+let selectedConditions = [];
+let selectedFamily = [];
+let selectedGoal = "";
+
+if (lang === "hi") {
+  document.getElementById("s0title").textContent = "हमें अपने बारे में थोड़ा बताएं";
+  document.getElementById("s0sub").textContent = "इससे Nirogini आपके लिए truly personal बनेगी";
+  document.getElementById("ageLabel").textContent = "उम्र";
+  document.getElementById("cityLabel").textContent = "शहर";
+  document.getElementById("heightLabel").textContent = "लंबाई (cm)";
+  document.getElementById("weightLabel").textContent = "वजन (kg)";
+  document.getElementById("s1title").textContent = "कोई health condition है?";
+  document.getElementById("s1sub").textContent = "यह completely private है — इससे हम better advice दे सकती हैं";
+  document.getElementById("s2title").textContent = "आप किसके लिए healthy रहना चाहती हैं?";
+  document.getElementById("s2sub").textContent = "Nirogini सिर्फ आपके लिए नहीं — पूरी family के लिए है";
+  document.getElementById("s3title").textContent = "अभी आपके लिए सबसे important क्या है?";
+  document.getElementById("s3sub").textContent = "इसके around हम आपका daily plan बनाएंगी";
+}
+
+function nextStep(from) {
+  document.getElementById(`step${from}`).style.display = "none";
+  document.getElementById(`dot${from}`).classList.remove("active");
+  document.getElementById(`dot${from}`).classList.add("done");
+  currentStep = from + 1;
+  document.getElementById(`step${currentStep}`).style.display = "block";
+  document.getElementById(`dot${currentStep}`).classList.add("active");
+}
+
+function toggleCondition(el) {
+  el.classList.toggle("selected");
+  const val = el.dataset.val;
+  if (selectedConditions.includes(val)) {
+    selectedConditions = selectedConditions.filter(v => v !== val);
+  } else {
+    selectedConditions.push(val);
+  }
+}
+
+function toggleFamily(el) {
+  el.classList.toggle("selected");
+  const val = el.dataset.val;
+  if (selectedFamily.includes(val)) {
+    selectedFamily = selectedFamily.filter(v => v !== val);
+  } else {
+    selectedFamily.push(val);
+  }
+}
+
+function selectGoal(el) {
+  document.querySelectorAll("#goalGrid .option-btn").forEach(b => b.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedGoal = el.dataset.val;
+}
+
+async function finish() {
+  const btn = document.getElementById("finishBtn");
+  btn.disabled = true;
+  btn.textContent = lang === "hi" ? "Save हो रहा है..." : "Saving...";
+
+  await apiCall("/api/profile", {
+    method: "PUT",
+    auth: true,
+    body: {
+      age: parseInt(document.getElementById("age").value) || null,
+      city: document.getElementById("city").value || null,
+      height_cm: parseFloat(document.getElementById("height").value) || null,
+      weight_kg: parseFloat(document.getElementById("weight").value) || null,
+      medical_conditions: selectedConditions.join(", ") || "None",
+      family_members: selectedFamily.join(", ") || "Family",
+      language: lang,
+    }
+  });
+
+  window.location.href = "dashboard.html";
+}
+</script>
+</body>
+</html>

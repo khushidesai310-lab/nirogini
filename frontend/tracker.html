@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Log — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.mood-selector { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
+.mood-btn {
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface-2);
+  font-size: 1.6rem; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.mood-btn.selected { border-color: var(--coral); transform: scale(1.15); background: rgba(233,97,79,0.08); }
+.range-display { text-align: center; font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--coral); margin: 8px 0; }
+input[type="range"] { width: 100%; accent-color: var(--coral); }
+.log-section { margin-bottom: 24px; }
+.log-section-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.points-preview { background: rgba(233,97,79,0.08); border: 1px solid rgba(233,97,79,0.2); border-radius: 12px; padding: 14px; text-align: center; margin-bottom: 20px; }
+.points-preview-val { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; color: var(--coral); }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"></div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Home</a>
+    <a href="tracker.html" class="nav-item active"><span class="nav-icon">📊</span> Health Log</a>
+    <a href="menopause.html" class="nav-item"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item"><span class="nav-icon">💬</span> Chat</a>
+    <a href="community.html" class="nav-item"><span class="nav-icon">👯‍♀️</span> My Circle</a>
+    <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏥</span> Hospitals</a>
+    <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reports</a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> Sign Out</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1 id="pageTitle">📊 Log Your Day</h1>
+      <p id="pageSubtitle">Every entry earns you points — you're doing great!</p>
+    </div>
+
+    <div class="points-preview">
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;" id="pointsPreviewLabel">Points you'll earn today</div>
+      <div class="points-preview-val" id="pointsPreview">0</div>
+      <div style="font-size:0.8rem;color:var(--text-dim);" id="pointsPreviewSub">Fill in more to earn more! 🌟</div>
+    </div>
+
+    <div class="card">
+      <!-- Water -->
+      <div class="log-section">
+        <div class="log-section-title">💧 <span id="waterTitle">Water intake</span></div>
+        <div class="range-display"><span id="waterDisplay">0</span> <span id="waterUnit">glasses</span></div>
+        <input type="range" id="waterInput" min="0" max="12" value="0"
+          oninput="document.getElementById('waterDisplay').textContent=this.value; updatePoints()">
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim);">
+          <span>0</span><span id="waterGoalMark">🎯 Goal: 8</span><span>12</span>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="log-section">
+        <div class="log-section-title">👟 <span id="stepsTitle">Steps walked</span></div>
+        <div class="range-display"><span id="stepsDisplay">0</span></div>
+        <input type="range" id="stepsInput" min="0" max="15000" step="500" value="0"
+          oninput="document.getElementById('stepsDisplay').textContent=parseInt(this.value).toLocaleString(); updatePoints()">
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim);">
+          <span>0</span><span id="stepsGoalMark">🎯 Goal: 5,000</span><span>15k</span>
+        </div>
+      </div>
+
+      <!-- Sleep -->
+      <div class="log-section">
+        <div class="log-section-title">😴 <span id="sleepTitle">Hours of sleep</span></div>
+        <div class="range-display"><span id="sleepDisplay">0</span> <span id="sleepUnit">hours</span></div>
+        <input type="range" id="sleepInput" min="0" max="10" step="0.5" value="0"
+          oninput="document.getElementById('sleepDisplay').textContent=this.value; updatePoints()">
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim);">
+          <span>0</span><span id="sleepGoalMark">🎯 Goal: 7 hrs</span><span>10</span>
+        </div>
+      </div>
+
+      <!-- Mood -->
+      <div class="log-section">
+        <div class="log-section-title">😊 <span id="moodTitle">How are you feeling today?</span></div>
+        <div class="mood-selector">
+          <button class="mood-btn" data-val="1" onclick="selectMood(this)">😔</button>
+          <button class="mood-btn" data-val="2" onclick="selectMood(this)">😕</button>
+          <button class="mood-btn" data-val="3" onclick="selectMood(this)">😊</button>
+          <button class="mood-btn" data-val="4" onclick="selectMood(this)">😄</button>
+          <button class="mood-btn" data-val="5" onclick="selectMood(this)">🤩</button>
+        </div>
+      </div>
+
+      <!-- Vitals -->
+      <div class="log-section">
+        <div class="log-section-title">❤️ <span id="vitalsTitle">Vitals (optional)</span></div>
+        <div class="grid-2" style="gap:12px;">
+          <div class="field">
+            <label id="bpLabel">Blood Pressure</label>
+            <div style="display:flex;gap:8px;">
+              <input type="number" id="bpSys" placeholder="120" style="flex:1;">
+              <span style="align-self:center;color:var(--text-dim);">/</span>
+              <input type="number" id="bpDia" placeholder="80" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <label id="sugarLabel">Blood Sugar (mg/dL)</label>
+            <input type="number" id="sugar" placeholder="100">
+          </div>
+          <div class="field">
+            <label id="weightLabel">Weight (kg)</label>
+            <input type="number" id="weight" placeholder="60" step="0.1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="log-section">
+        <div class="log-section-title">📝 <span id="notesTitle">Anything else?</span></div>
+        <textarea id="notes" rows="3" style="border-radius:12px;" id="notesArea"
+          placeholder="Any symptoms, feelings, or notes for yourself..."></textarea>
+      </div>
+
+      <div class="error-msg" id="errorBox"></div>
+      <div class="success-msg" id="successBox"></div>
+
+      <button class="btn-primary" id="saveBtn" onclick="saveLog()">Save today's log 🌸</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+let selectedMood = 0;
+
+if (lang === "hi") {
+  document.getElementById("pageTitle").textContent = "📊 आज का Log";
+  document.getElementById("pageSubtitle").textContent = "हर entry पर points मिलते हैं — बहुत अच्छा कर रही हैं आप!";
+  document.getElementById("pointsPreviewLabel").textContent = "आज के points";
+  document.getElementById("pointsPreviewSub").textContent = "ज्यादा fill करें, ज्यादा points पाएं! 🌟";
+  document.getElementById("waterTitle").textContent = "पानी कितना पिया";
+  document.getElementById("waterUnit").textContent = "गिलास";
+  document.getElementById("waterGoalMark").textContent = "🎯 Goal: 8 गिलास";
+  document.getElementById("stepsTitle").textContent = "कितने कदम चलीं";
+  document.getElementById("stepsGoalMark").textContent = "🎯 Goal: 5,000 कदम";
+  document.getElementById("sleepTitle").textContent = "कितने घंटे सोईं";
+  document.getElementById("sleepUnit").textContent = "घंटे";
+  document.getElementById("sleepGoalMark").textContent = "🎯 Goal: 7 घंटे";
+  document.getElementById("moodTitle").textContent = "आज कैसा feel हो रहा है?";
+  document.getElementById("vitalsTitle").textContent = "Vitals (optional)";
+  document.getElementById("bpLabel").textContent = "Blood Pressure";
+  document.getElementById("sugarLabel").textContent = "Blood Sugar (mg/dL)";
+  document.getElementById("weightLabel").textContent = "वजन (kg)";
+  document.getElementById("notesTitle").textContent = "कुछ और?";
+  document.getElementById("saveBtn").textContent = "आज का log save करें 🌸";
+}
+
+// Load existing today log
+async function loadTodayLog() {
+  const result = await apiCall("/api/health/today", { auth: true });
+  if (result && result.success && result.log && Object.keys(result.log).length > 0) {
+    const log = result.log;
+    if (log.water_glasses) {
+      document.getElementById("waterInput").value = log.water_glasses;
+      document.getElementById("waterDisplay").textContent = log.water_glasses;
+    }
+    if (log.steps) {
+      document.getElementById("stepsInput").value = log.steps;
+      document.getElementById("stepsDisplay").textContent = parseInt(log.steps).toLocaleString();
+    }
+    if (log.sleep_hours) {
+      document.getElementById("sleepInput").value = log.sleep_hours;
+      document.getElementById("sleepDisplay").textContent = log.sleep_hours;
+    }
+    if (log.mood) {
+      const moodBtn = document.querySelector(`.mood-btn[data-val="${log.mood}"]`);
+      if (moodBtn) selectMood(moodBtn);
+    }
+    if (log.bp_systolic) document.getElementById("bpSys").value = log.bp_systolic;
+    if (log.bp_diastolic) document.getElementById("bpDia").value = log.bp_diastolic;
+    if (log.blood_sugar) document.getElementById("sugar").value = log.blood_sugar;
+    if (log.weight_kg) document.getElementById("weight").value = log.weight_kg;
+    if (log.notes) document.getElementById("notes").value = log.notes;
+    updatePoints();
+  }
+}
+
+function selectMood(el) {
+  document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedMood = parseInt(el.dataset.val);
+}
+
+function updatePoints() {
+  let pts = 0;
+  const water = parseInt(document.getElementById("waterInput").value) || 0;
+  const steps = parseInt(document.getElementById("stepsInput").value) || 0;
+  const sleep = parseFloat(document.getElementById("sleepInput").value) || 0;
+  if (water >= 6) pts += 10; else if (water >= 3) pts += 5;
+  if (steps >= 5000) pts += 10; else if (steps >= 2000) pts += 5;
+  if (sleep >= 7) pts += 10; else if (sleep >= 5) pts += 5;
+  if (document.getElementById("bpSys").value) pts += 5;
+  if (document.getElementById("sugar").value) pts += 5;
+  document.getElementById("pointsPreview").textContent = pts;
+}
+
+async function saveLog() {
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.textContent = lang === "hi" ? "Save हो रहा है..." : "Saving...";
+
+  const data = {
+    water_glasses: parseInt(document.getElementById("waterInput").value) || 0,
+    steps: parseInt(document.getElementById("stepsInput").value) || 0,
+    sleep_hours: parseFloat(document.getElementById("sleepInput").value) || 0,
+    mood: selectedMood || 3,
+    bp_systolic: parseInt(document.getElementById("bpSys").value) || null,
+    bp_diastolic: parseInt(document.getElementById("bpDia").value) || null,
+    blood_sugar: parseFloat(document.getElementById("sugar").value) || null,
+    weight_kg: parseFloat(document.getElementById("weight").value) || null,
+    notes: document.getElementById("notes").value,
+  };
+
+  const result = await apiCall("/api/health/log", { method: "POST", auth: true, body: data });
+
+  if (result && result.success) {
+    const msg = lang === "hi"
+      ? `🎉 Log save हो गया! आपने ${result.points_earned} points कमाए!`
+      : `🎉 Logged! You earned ${result.points_earned} points!`;
+    showSuccess(document.getElementById("successBox"), msg);
+    setTimeout(() => window.location.href = "dashboard.html", 1500);
+  } else {
+    showError(document.getElementById("errorBox"), (result && result.error) || "Could not save. Please try again.");
+    btn.disabled = false;
+    btn.textContent = lang === "hi" ? "आज का log save करें 🌸" : "Save today's log 🌸";
+  }
+}
+
+function signOut() {
+  apiCall("/api/logout", { method: "POST", auth: true });
+  Auth.clear();
+  window.location.href = "index.html";
+}
+
+loadTodayLog();
+</script>
+</body>
+</html>

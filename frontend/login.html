@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;"></div>
+      <div class="auth-brand-name">Nirogini</div>
+    </div>
+
+    <h2 id="title" style="margin-bottom:6px;font-size:1.4rem;">Welcome back! 💙</h2>
+    <p id="subtitle" style="color:var(--text-dim);font-size:0.9rem;margin-bottom:24px;">We missed you — let's check in on how you're doing</p>
+
+    <div class="error-msg" id="errorBox"></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label id="emailLabel">Email</label>
+        <input type="email" id="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label id="pwLabel">Password</label>
+        <input type="password" id="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-primary" id="submitBtn">Sign In</button>
+    </form>
+
+    <div class="form-foot" id="signupLink">
+      New to Nirogini? <a href="index.html">Join us 🌸</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const lang = Lang.get();
+if (lang === "hi") {
+  document.getElementById("title").textContent = "वापस आईं! 💙";
+  document.getElementById("subtitle").textContent = "आपकी याद आ रही थी — चलिए check करते हैं कैसी हैं आप";
+  document.getElementById("emailLabel").textContent = "Email";
+  document.getElementById("pwLabel").textContent = "Password";
+  document.getElementById("submitBtn").textContent = "Sign In करें";
+  document.getElementById("signupLink").innerHTML = 'Nirogini में नई हैं? <a href="index.html">Join करें 🌸</a>';
+}
+
+if (Auth.getToken()) window.location.href = "dashboard.html";
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("submitBtn");
+  const errorBox = document.getElementById("errorBox");
+  btn.disabled = true;
+  btn.textContent = lang === "hi" ? "Sign in हो रहा है..." : "Signing in...";
+
+  const result = await apiCall("/api/login", {
+    method: "POST",
+    body: {
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("password").value,
+    }
+  });
+
+  if (result && result.success) {
+    Auth.setToken(result.token);
+    Auth.setUser(result.user);
+    window.location.href = "dashboard.html";
+  } else {
+    showError(errorBox, (result && result.error) || "Invalid email or password.");
+    btn.disabled = false;
+    btn.textContent = lang === "hi" ? "Sign In करें" : "Sign In";
+  }
+});
+</script>
+</body>
+</html>

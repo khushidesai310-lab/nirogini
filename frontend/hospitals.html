@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Hospitals — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"></div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Home</a>
+    <a href="tracker.html" class="nav-item"><span class="nav-icon">📊</span> Health Log</a>
+    <a href="menopause.html" class="nav-item"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item"><span class="nav-icon">💬</span> Chat</a>
+    <a href="community.html" class="nav-item"><span class="nav-icon">👯‍♀️</span> My Circle</a>
+    <a href="hospitals.html" class="nav-item active"><span class="nav-icon">🏥</span> Hospitals</a>
+    <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reports</a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> Sign Out</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1 id="pageTitle">🏥 Find Trusted Hospitals</h1>
+      <p id="pageSubtitle">Hospitals we trust — sorted by what works for your budget</p>
+    </div>
+
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="field">
+          <label id="cityLabel">Your city</label>
+          <select id="citySelect" onchange="loadHospitals()">
+            <option value="mumbai">Mumbai</option>
+            <option value="delhi">Delhi</option>
+            <option value="bangalore">Bangalore</option>
+            <option value="ahmedabad">Ahmedabad</option>
+            <option value="kolkata">Kolkata</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="budgetLabel">I prefer</label>
+          <select id="budgetSelect" onchange="loadHospitals()">
+            <option value="government">Government hospital — affordable</option>
+            <option value="affordable">Affordable — govt or low-cost private</option>
+            <option value="moderate">Good quality — moderate cost</option>
+            <option value="private">Private hospital only</option>
+            <option value="any">Best available — all types</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="background:rgba(76,175,136,0.08);border:1px solid rgba(76,175,136,0.2);border-radius:12px;padding:14px;margin-bottom:20px;font-size:0.85rem;color:var(--text-dim);" id="ayushmanNote">
+        💡 <strong>Ayushman Bharat:</strong> Hospitals marked with 💚 accept Ayushman Bharat health cards. Free treatment up to ₹5 lakh per family per year.
+      </div>
+
+      <div id="hospitalsList">
+        <div style="text-align:center;padding:20px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+
+if (lang === "hi") {
+  document.getElementById("pageTitle").textContent = "🏥 Trusted Hospitals खोजें";
+  document.getElementById("pageSubtitle").textContent = "वो hospitals जिन पर हम trust करते हैं — आपके budget के according";
+  document.getElementById("cityLabel").textContent = "आपका शहर";
+  document.getElementById("budgetLabel").textContent = "मैं prefer करती हूं";
+  document.getElementById("ayushmanNote").innerHTML = `💡 <strong>Ayushman Bharat:</strong> 💚 mark वाले hospitals Ayushman Bharat health card accept करते हैं। परिवार को साल में ₹5 लाख तक free इलाज।`;
+  document.getElementById("budgetSelect").innerHTML = `
+    <option value="government">Government hospital — affordable</option>
+    <option value="affordable">Affordable — govt या low-cost private</option>
+    <option value="moderate">अच्छी quality — moderate cost</option>
+    <option value="private">Private hospital only</option>
+    <option value="any">Best available — all types</option>
+  `;
+}
+
+// Set city from user profile
+const user = Auth.getUser();
+if (user && user.city) {
+  const sel = document.getElementById("citySelect");
+  for (let opt of sel.options) {
+    if (opt.value === user.city) { opt.selected = true; break; }
+  }
+}
+
+async function loadHospitals() {
+  const city = document.getElementById("citySelect").value;
+  const budget = document.getElementById("budgetSelect").value;
+  document.getElementById("hospitalsList").innerHTML = '<div style="text-align:center;padding:20px;"><div class="spinner"></div></div>';
+
+  const result = await apiCall(`/api/hospitals?city=${city}&budget=${budget}`);
+  if (!result || !result.success || result.hospitals.length === 0) {
+    document.getElementById("hospitalsList").innerHTML = `<p style="text-align:center;color:var(--text-dim);">No hospitals found for this selection.</p>`;
+    return;
+  }
+
+  document.getElementById("hospitalsList").innerHTML = result.hospitals.map(h => `
+    <div class="hospital-card">
+      <div>
+        <span class="hospital-type-badge ${h.type.toLowerCase().replace(" ", "-")}">${h.type}</span>
+        ${h.ayushman ? '<span class="ayushman-badge">💚 Ayushman</span>' : ''}
+      </div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin-bottom:4px;">${h.name}</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;">📍 ${h.area} &nbsp;|&nbsp; 🏥 ${h.speciality}</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:10px;font-style:italic;">"${h.note}"</div>
+      <div style="font-size:0.85rem;"><span style="color:var(--text-dim);">📞</span> <a href="tel:${h.phone}">${h.phone}</a></div>
+    </div>
+  `).join("");
+}
+
+function signOut() {
+  apiCall("/api/logout", { method: "POST", auth: true });
+  Auth.clear();
+  window.location.href = "index.html";
+}
+
+loadHospitals();
+</script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report Explainer — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.upload-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+.upload-method {
+  border: 2px solid var(--border); border-radius: 16px;
+  padding: 24px 16px; text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--surface-2);
+}
+.upload-method:hover, .upload-method.active {
+  border-color: var(--coral); background: rgba(233,97,79,0.05);
+}
+.upload-method .method-icon { font-size: 2rem; margin-bottom: 10px; }
+.upload-method .method-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 4px; }
+.upload-method .method-sub { font-size: 0.78rem; color: var(--text-dim); }
+
+.upload-section { display: none; }
+.upload-section.active { display: block; }
+
+.drop-zone {
+  border: 2px dashed var(--border-strong); border-radius: 16px;
+  padding: 48px 24px; text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--surface-2);
+}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--coral); background: rgba(233,97,79,0.05); }
+.drop-zone-icon { font-size: 3rem; margin-bottom: 12px; }
+.drop-zone-title { font-weight: 600; margin-bottom: 6px; }
+.drop-zone-sub { font-size: 0.85rem; color: var(--text-dim); }
+
+.preview-area { margin-top: 16px; display: none; }
+.preview-img { max-width: 100%; border-radius: 12px; border: 1px solid var(--border); }
+
+.example-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip {
+  padding: 6px 14px; border-radius: 16px;
+  background: white; border: 1px solid var(--border);
+  font-size: 0.8rem; cursor: pointer; color: var(--text-dim); transition: all 0.15s;
+}
+.chip:hover { border-color: var(--coral); color: var(--coral); }
+
+.result-card { border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+.result-normal { border-color: rgba(76,175,136,0.3); background: rgba(76,175,136,0.04); }
+.result-high { border-color: rgba(233,97,79,0.3); background: rgba(233,97,79,0.04); }
+.result-low { border-color: rgba(244,167,54,0.3); background: rgba(244,167,54,0.04); }
+.result-borderline { border-color: rgba(244,167,54,0.3); background: rgba(244,167,54,0.04); }
+
+.status-pill {
+  display: inline-block; padding: 3px 12px; border-radius: 12px;
+  font-size: 0.75rem; font-weight: 700;
+}
+.status-normal { background: rgba(76,175,136,0.15); color: #2e7d52; }
+.status-high { background: rgba(233,97,79,0.15); color: var(--coral); }
+.status-low { background: rgba(244,167,54,0.15); color: #b07d1a; }
+.status-borderline { background: rgba(244,167,54,0.15); color: #b07d1a; }
+
+@media (max-width: 600px) {
+  .upload-methods { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"></div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Home</a>
+    <a href="tracker.html" class="nav-item"><span class="nav-icon">📊</span> Health Log</a>
+    <a href="menopause.html" class="nav-item"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item"><span class="nav-icon">💬</span> Chat</a>
+    <a href="community.html" class="nav-item"><span class="nav-icon">👯‍♀️</span> My Circle</a>
+    <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏥</span> Hospitals</a>
+    <a href="reports.html" class="nav-item active"><span class="nav-icon">📋</span> Reports</a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> Sign Out</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1 id="pageTitle">📋 Understand Your Reports</h1>
+      <p id="pageSubtitle">Upload your report or enter values — we'll explain everything in simple language</p>
+    </div>
+
+    <!-- Info -->
+    <div style="background:rgba(91,164,207,0.08);border:1px solid rgba(91,164,207,0.2);border-radius:14px;padding:16px;margin-bottom:20px;font-size:0.88rem;color:var(--text-dim);line-height:1.6;">
+      💙 <strong id="infoBold">How this helps:</strong> <span id="infoText">Nirogini explains what your test results mean in plain language, checks if values are in the normal range for Indian women, and tells you what questions to ask your doctor. This is for understanding only — always consult your doctor.</span>
+    </div>
+
+    <div class="card">
+      <!-- Upload method selector -->
+      <div class="card-label" id="methodLabel">HOW WOULD YOU LIKE TO SHARE YOUR REPORT?</div>
+      <div class="upload-methods">
+        <div class="upload-method active" id="method-photo" onclick="switchMethod('photo')">
+          <div class="method-icon">📸</div>
+          <div class="method-title" id="photoTitle">Take a Photo</div>
+          <div class="method-sub" id="photoSub">Click a picture of your report</div>
+        </div>
+        <div class="upload-method" id="method-pdf" onclick="switchMethod('pdf')">
+          <div class="method-icon">📄</div>
+          <div class="method-title" id="pdfTitle">Upload PDF/Image</div>
+          <div class="method-sub" id="pdfSub">Upload from your phone or computer</div>
+        </div>
+        <div class="upload-method" id="method-manual" onclick="switchMethod('manual')">
+          <div class="method-icon">✏️</div>
+          <div class="method-title" id="manualTitle">Type Values</div>
+          <div class="method-sub" id="manualSub">Enter test names and numbers</div>
+        </div>
+      </div>
+
+      <!-- Camera capture -->
+      <div class="upload-section active" id="section-photo">
+        <div class="drop-zone" onclick="document.getElementById('cameraInput').click()">
+          <div class="drop-zone-icon">📷</div>
+          <div class="drop-zone-title" id="cameraTitle">Tap to open camera</div>
+          <div class="drop-zone-sub" id="cameraSub">Take a clear photo of your lab report</div>
+        </div>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(this)">
+        <div class="preview-area" id="photoPreview">
+          <img id="photoImg" class="preview-img" alt="Report photo">
+          <div style="margin-top:10px;font-size:0.85rem;color:var(--text-dim);" id="photoNote">
+            ✅ Photo captured! Nirogini will extract and explain your values.
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF/Image upload -->
+      <div class="upload-section" id="section-pdf">
+        <div class="drop-zone" id="dropZone"
+          onclick="document.getElementById('fileInput').click()"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDrop(event)">
+          <div class="drop-zone-icon">📁</div>
+          <div class="drop-zone-title" id="uploadTitle">Tap to upload your report</div>
+          <div class="drop-zone-sub" id="uploadSub">PDF, JPG, or PNG — your lab report or prescription</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none;" onchange="handleFileUpload(this)">
+        <div class="preview-area" id="filePreview">
+          <div id="fileInfo" style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:1.5rem;">📄</span>
+            <div>
+              <div id="fileName" style="font-weight:600;font-size:0.9rem;"></div>
+              <div id="fileSize" style="font-size:0.78rem;color:var(--text-dim);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual entry -->
+      <div class="upload-section" id="section-manual">
+        <textarea id="manualInput" rows="6" style="border-radius:12px;width:100%;"
+          placeholder="Type your test results here, one per line:&#10;Hemoglobin: 10.2 g/dL&#10;TSH: 6.5 mIU/L&#10;Fasting Blood Sugar: 118 mg/dL&#10;Total Cholesterol: 210 mg/dL"></textarea>
+        <div id="exampleLabel" style="font-size:0.8rem;color:var(--text-dim);margin-top:10px;">Quick examples:</div>
+        <div class="example-chips">
+          <div class="chip" onclick="fillExample('blood')">Blood Test 🩸</div>
+          <div class="chip" onclick="fillExample('thyroid')">Thyroid 🦋</div>
+          <div class="chip" onclick="fillExample('diabetes')">Diabetes 🍬</div>
+          <div class="chip" onclick="fillExample('cholesterol')">Cholesterol 💛</div>
+          <div class="chip" onclick="fillExample('vitamin')">Vitamin D & B12 ☀️</div>
+          <div class="chip" onclick="fillExample('menopause')">Menopause Panel 🌙</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="error-msg" id="errorBox"></div>
+        <button class="btn-primary" id="explainBtn" onclick="explainReport()">
+          Explain my report 🔍
+        </button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsSection" style="display:none;">
+      <div class="card">
+        <div class="card-label" id="resultsLabel">WHAT YOUR REPORT SAYS</div>
+        <div style="background:linear-gradient(135deg,rgba(76,175,136,0.08),rgba(91,164,207,0.05));border:1px solid rgba(76,175,136,0.2);border-radius:14px;padding:18px;margin-bottom:16px;font-size:0.92rem;line-height:1.6;" id="reportSummary"></div>
+        <div id="valuesList"></div>
+        <div id="doctorQuestions" style="display:none;background:rgba(233,97,79,0.05);border:1px solid rgba(233,97,79,0.15);border-radius:14px;padding:18px;margin-top:16px;">
+          <div style="font-weight:600;margin-bottom:10px;" id="questionsTitle">💬 Questions to ask your doctor</div>
+          <ul id="questionsList" style="padding-left:20px;font-size:0.88rem;color:var(--text-dim);line-height:1.8;"></ul>
+        </div>
+        <div style="background:rgba(244,167,54,0.08);border:1px solid rgba(244,167,54,0.25);border-radius:12px;padding:14px;margin-top:16px;font-size:0.82rem;color:var(--text-dim);line-height:1.5;" id="disclaimerBox">
+          ⚠️ This is for educational purposes only. Always consult a qualified doctor before making any health decisions. Nirogini is not a diagnostic tool.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+let currentMethod = 'photo';
+let uploadedFileData = null;
+let uploadedFileName = null;
+
+const EXAMPLES = {
+  blood: "Hemoglobin: 10.2 g/dL\nWBC: 8500 cells/mcL\nPlatelets: 220000 /mcL\nHematocrit: 32%",
+  thyroid: "TSH: 6.8 mIU/L\nT3: 1.1 ng/mL\nT4: 6.2 mcg/dL",
+  diabetes: "Fasting Blood Sugar: 118 mg/dL\nHbA1c: 6.2%\nPost-meal sugar: 165 mg/dL",
+  cholesterol: "Total Cholesterol: 215 mg/dL\nHDL: 42 mg/dL\nLDL: 148 mg/dL\nTriglycerides: 185 mg/dL",
+  vitamin: "Vitamin D: 14 ng/mL\nVitamin B12: 180 pg/mL\nIron: 55 mcg/dL\nFerritin: 8 ng/mL",
+  menopause: "FSH: 45 mIU/mL\nLH: 30 mIU/mL\nEstradiol: 18 pg/mL\nProgesterone: 0.3 ng/mL\nTestosterone: 22 ng/dL"
+};
+
+if (lang === "hi") {
+  document.getElementById("pageTitle").textContent = "📋 अपनी Report समझें";
+  document.getElementById("pageSubtitle").textContent = "Report upload करें या values enter करें — हम simple language में explain करेंगे";
+  document.getElementById("infoBold").textContent = "यह कैसे help करता है:";
+  document.getElementById("infoText").textContent = "Nirogini आपके test results plain language में explain करती है, check करती है कि values Indian women के लिए normal range में हैं या नहीं, और बताती है doctor से क्या पूछना है।";
+  document.getElementById("methodLabel").textContent = "आप अपनी REPORT कैसे SHARE करना चाहती हैं?";
+  document.getElementById("photoTitle").textContent = "Photo लें";
+  document.getElementById("photoSub").textContent = "Report की photo click करें";
+  document.getElementById("pdfTitle").textContent = "PDF/Image Upload करें";
+  document.getElementById("pdfSub").textContent = "File upload करें";
+  document.getElementById("manualTitle").textContent = "Values Type करें";
+  document.getElementById("manualSub").textContent = "Test name और number enter करें";
+  document.getElementById("cameraTitle").textContent = "Camera खोलने के लिए tap करें";
+  document.getElementById("cameraSub").textContent = "अपनी lab report की clear photo लें";
+  document.getElementById("uploadTitle").textContent = "Report upload करने के लिए tap करें";
+  document.getElementById("uploadSub").textContent = "PDF, JPG, या PNG";
+  document.getElementById("exampleLabel").textContent = "Quick examples:";
+  document.getElementById("explainBtn").textContent = "मेरी report explain करें 🔍";
+  document.getElementById("manualInput").placeholder = "अपने test results यहाँ type करें:\nHemoglobin: 10.2 g/dL\nTSH: 6.5 mIU/L\nFasting Blood Sugar: 118 mg/dL";
+}
+
+function switchMethod(method) {
+  currentMethod = method;
+  document.querySelectorAll('.upload-method').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.upload-section').forEach(el => el.classList.remove('active'));
+  document.getElementById('method-' + method).classList.add('active');
+  document.getElementById('section-' + method).classList.add('active');
+}
+
+function handleImageUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    uploadedFileData = e.target.result;
+    uploadedFileName = file.name;
+    document.getElementById("photoImg").src = e.target.result;
+    document.getElementById("photoPreview").style.display = "block";
+    if (lang === "hi") {
+      document.getElementById("photoNote").textContent = "✅ Photo capture हो गई! Nirogini आपकी values explain करेगी।";
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleFileUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    uploadedFileData = e.target.result;
+    uploadedFileName = file.name;
+    document.getElementById("fileName").textContent = file.name;
+    document.getElementById("fileSize").textContent = (file.size / 1024).toFixed(1) + " KB";
+    document.getElementById("filePreview").style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  document.getElementById("dropZone").classList.remove("dragover");
+  const file = event.dataTransfer.files[0];
+  if (file) {
+    const fakeInput = { files: [file] };
+    handleFileUpload(fakeInput);
+  }
+}
+
+function fillExample(type) {
+  switchMethod('manual');
+  document.getElementById("manualInput").value = EXAMPLES[type];
+}
+
+async function explainReport() {
+  let reportValues = "";
+
+  if (currentMethod === "manual") {
+    reportValues = document.getElementById("manualInput").value.trim();
+    if (!reportValues) {
+      showError(document.getElementById("errorBox"),
+        lang === "hi" ? "कृपया अपनी report values enter करें।" : "Please enter your report values.");
+      return;
+    }
+  } else if (currentMethod === "photo" || currentMethod === "pdf") {
+    if (!uploadedFileData) {
+      showError(document.getElementById("errorBox"),
+        lang === "hi"
+          ? (currentMethod === "photo" ? "कृपया पहले photo लें।" : "कृपया पहले file upload करें।")
+          : (currentMethod === "photo" ? "Please take a photo first." : "Please upload a file first."));
+      return;
+    }
+    // For uploaded files, tell the user we're processing
+    reportValues = `[Uploaded file: ${uploadedFileName}]\nPlease extract and explain all medical test values from this report image/document.`;
+  }
+
+  const btn = document.getElementById("explainBtn");
+  btn.disabled = true;
+  btn.textContent = lang === "hi" ? "Analyse हो रही है... 🔍" : "Analysing... 🔍";
+  document.getElementById("resultsSection").style.display = "none";
+  document.getElementById("errorBox").className = "error-msg";
+
+  const result = await apiCall("/api/recommendations/report", {
+    method: "POST", auth: true,
+    body: { report_values: reportValues, language: lang }
+  });
+
+  btn.disabled = false;
+  btn.textContent = lang === "hi" ? "मेरी report explain करें 🔍" : "Explain my report 🔍";
+
+  if (!result || !result.success) {
+    showError(document.getElementById("errorBox"),
+      (result && result.error) || "Could not analyse. Please try again.");
+    return;
+  }
+
+  const exp = result.explanation;
+  if (exp.error) {
+    showError(document.getElementById("errorBox"), exp.error);
+    return;
+  }
+
+  document.getElementById("reportSummary").textContent = exp.summary || "";
+  document.getElementById("resultsLabel").textContent =
+    lang === "hi" ? "आपकी REPORT का मतलब" : "WHAT YOUR REPORT SAYS";
+
+  const STATUS_CLASS = { normal: "result-normal", high: "result-high", low: "result-low", borderline: "result-borderline" };
+  const STATUS_LABEL = {
+    normal: lang === "hi" ? "✅ Normal" : "✅ Normal",
+    high: lang === "hi" ? "⬆️ High" : "⬆️ High",
+    low: lang === "hi" ? "⬇️ Low" : "⬇️ Low",
+    borderline: lang === "hi" ? "⚠️ Borderline" : "⚠️ Borderline",
+  };
+
+  if (exp.values && exp.values.length > 0) {
+    document.getElementById("valuesList").innerHTML = exp.values.map(v => `
+      <div class="result-card ${STATUS_CLASS[v.status] || ""}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-weight:600;font-size:0.95rem;">${v.name}</div>
+          <span class="status-pill status-${v.status}">${STATUS_LABEL[v.status] || v.status}</span>
+        </div>
+        <div style="display:flex;gap:20px;font-size:0.82rem;color:var(--text-dim);margin-bottom:8px;flex-wrap:wrap;">
+          <span><strong>${lang === "hi" ? "Value" : "Your value"}:</strong> ${v.value}</span>
+          <span><strong>${lang === "hi" ? "Normal" : "Normal range"}:</strong> ${v.normal_range}</span>
+        </div>
+        <div style="font-size:0.88rem;margin-bottom:4px;">${v.meaning}</div>
+        ${v.action ? `<div style="font-size:0.85rem;color:var(--coral);font-weight:500;margin-top:6px;">→ ${v.action}</div>` : ""}
+      </div>
+    `).join("");
+  }
+
+  if (exp.questions_for_doctor && exp.questions_for_doctor.length > 0) {
+    document.getElementById("doctorQuestions").style.display = "block";
+    document.getElementById("questionsTitle").textContent =
+      lang === "hi" ? "💬 Doctor से यह पूछें" : "💬 Questions to ask your doctor";
+    document.getElementById("questionsList").innerHTML =
+      exp.questions_for_doctor.map(q => `<li>${q}</li>`).join("");
+  }
+
+  if (exp.disclaimer) {
+    document.getElementById("disclaimerBox").textContent = "⚠️ " + exp.disclaimer;
+  }
+
+  document.getElementById("resultsSection").style.display = "block";
+  document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
+}
+
+function signOut() {
+  apiCall("/api/logout", { method: "POST", auth: true });
+  Auth.clear();
+  window.location.href = "index.html";
+}
+</script>
+</body>
+</html>

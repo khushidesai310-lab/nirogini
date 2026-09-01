@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat with Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.chat-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); background: white; }
+.chat-header-inner { display: flex; align-items: center; gap: 14px; }
+.companion-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--coral), var(--gold));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; flex-shrink: 0;
+}
+.companion-name { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+.companion-status { font-size: 0.8rem; color: var(--mint); }
+.quick-prompts {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.quick-prompt {
+  padding: 6px 14px; border-radius: 16px;
+  background: white; border: 1px solid var(--border);
+  font-size: 0.82rem; cursor: pointer; transition: all 0.15s; color: var(--text-dim);
+}
+.quick-prompt:hover { border-color: var(--coral); color: var(--coral); background: rgba(233,97,79,0.05); }
+.api-warning {
+  background: rgba(244,167,54,0.1); border: 1px solid rgba(244,167,54,0.3);
+  color: #8B6E65; padding: 12px 16px; font-size: 0.85rem;
+  display: none; margin: 8px 16px; border-radius: 10px;
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"></div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Home</a>
+    <a href="tracker.html" class="nav-item"><span class="nav-icon">📊</span> Health Log</a>
+    <a href="menopause.html" class="nav-item"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item active"><span class="nav-icon">💬</span> Chat</a>
+    <a href="community.html" class="nav-item"><span class="nav-icon">👯‍♀️</span> My Circle</a>
+    <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏥</span> Hospitals</a>
+    <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reports</a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> Sign Out</a>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="chat-header">
+      <div class="chat-header-inner">
+        <div class="companion-avatar">🌸</div>
+        <div>
+          <div class="companion-name" id="companionName">Nirogini — Your Health Companion</div>
+          <div class="companion-status" id="companionStatus">● Always here for you</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-warning" id="apiWarning">
+      ⚠️ Chatbot requires GROQ_API_KEY to be set. Please restart the server with your API key.
+    </div>
+
+    <div class="quick-prompts" id="quickPrompts">
+      <div class="quick-prompt" onclick="sendQuick(this)">How's my health? 🔍</div>
+      <div class="quick-prompt" onclick="sendQuick(this)">I'm feeling tired 😴</div>
+      <div class="quick-prompt" onclick="sendQuick(this)">What to eat today? 🥗</div>
+      <div class="quick-prompt" onclick="sendQuick(this)">Menopause symptoms 🌙</div>
+      <div class="quick-prompt" onclick="sendQuick(this)">I'm worried about something 😟</div>
+      <div class="quick-prompt" onclick="sendQuick(this)">Motivate me! 💪</div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;"></div>
+
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Talk to me — anything on your mind..." autocomplete="off">
+      <button class="chat-send" id="sendBtn" onclick="sendMessage()">Send 💙</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+const user = Auth.getUser();
+let chatHistory = [];
+let isWaiting = false;
+
+if (lang === "hi") {
+  document.getElementById("companionName").textContent = "Nirogini — आपकी Health Companion";
+  document.getElementById("companionStatus").textContent = "● हमेशा आपके साथ";
+  document.getElementById("chatInput").placeholder = "मुझसे कुछ भी बात करें...";
+  document.getElementById("sendBtn").textContent = "भेजें 💙";
+  document.getElementById("quickPrompts").innerHTML = `
+    <div class="quick-prompt" onclick="sendQuick(this)">मेरी health कैसी है? 🔍</div>
+    <div class="quick-prompt" onclick="sendQuick(this)">बहुत थकान हो रही है 😴</div>
+    <div class="quick-prompt" onclick="sendQuick(this)">आज क्या खाएं? 🥗</div>
+    <div class="quick-prompt" onclick="sendQuick(this)">Menopause के बारे में 🌙</div>
+    <div class="quick-prompt" onclick="sendQuick(this)">कुछ worry हो रही है 😟</div>
+    <div class="quick-prompt" onclick="sendQuick(this)">Motivate करो! 💪</div>
+  `;
+  document.getElementById("apiWarning").textContent = "⚠️ Chatbot के लिए GROQ_API_KEY जरूरी है। Server को API key के साथ restart करें।";
+}
+
+function addBubble(role, text) {
+  const div = document.createElement("div");
+  div.className = `chat-bubble ${role}`;
+  div.textContent = text;
+  document.getElementById("chatMessages").appendChild(div);
+  document.getElementById("chatMessages").scrollTop = 999999;
+  return div;
+}
+
+async function sendMessage(msg) {
+  if (isWaiting) return;
+  const input = document.getElementById("chatInput");
+  const message = msg || input.value.trim();
+  if (!message) return;
+  input.value = "";
+  isWaiting = true;
+
+  addBubble("user", message);
+  const thinking = addBubble("ai thinking", lang === "hi" ? "सोच रही हूं... 💭" : "Thinking... 💭");
+  document.getElementById("sendBtn").disabled = true;
+
+  try {
+    const result = await apiCall("/api/companion/chat", {
+      method: "POST", auth: true,
+      body: { message, language: lang }
+    });
+
+    thinking.remove();
+
+    if (result && result.success) {
+      addBubble("ai", result.reply);
+      chatHistory.push({ role: "user", content: message });
+      chatHistory.push({ role: "assistant", content: result.reply });
+      document.getElementById("apiWarning").style.display = "none";
+    } else {
+      const errMsg = result && result.error ? result.error : "Something went wrong.";
+      if (errMsg.includes("GROQ_API_KEY")) {
+        document.getElementById("apiWarning").style.display = "block";
+        addBubble("ai", lang === "hi"
+          ? "Sorry, अभी chat काम नहीं कर रहा। Server को GROQ_API_KEY के साथ restart करें।"
+          : "Sorry, chat isn't working right now. The server needs to be restarted with the GROQ_API_KEY.");
+      } else {
+        addBubble("ai", lang === "hi"
+          ? "Sorry, अभी respond नहीं कर पा रही। थोड़ी देर में try करें।"
+          : "Sorry, I couldn't respond right now. Please try again.");
+      }
+    }
+  } catch(e) {
+    thinking.remove();
+    addBubble("ai", lang === "hi" ? "Network error. Please try again." : "Network error. Please try again.");
+  }
+
+  document.getElementById("sendBtn").disabled = false;
+  isWaiting = false;
+}
+
+function sendQuick(el) { sendMessage(el.textContent.trim()); }
+
+document.getElementById("chatInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) sendMessage();
+});
+
+// Opening message
+const name = user ? user.name.split(" ")[0] + " ji" : "there";
+const openingMsg = lang === "hi"
+  ? `Hey ${name}! 💙 Main Nirogini hoon — aapki personal health companion. Aaj kya feel ho raha hai? Kuch bhi share kar sakte hain! Menopause se related kuch chahiye? Ya koi aur health concern? Sab theek hai yahan. 🌸`
+  : `Hey ${name}! 💙 I'm Nirogini — your personal health companion. How are you feeling today? You can share anything — whether it's a health worry, menopause symptoms, tiredness, or just need someone to talk to. I'm here! 🌸`;
+addBubble("ai", openingMsg);
+
+function signOut() {
+  apiCall("/api/logout", { method: "POST", auth: true });
+  Auth.clear();
+  window.location.href = "index.html";
+}
+</script>
+</body>
+</html>

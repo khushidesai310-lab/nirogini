@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cycle Tracker — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.cycle-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; margin-bottom: 10px;
+}
+.flow-btns { display: flex; gap: 8px; margin-top: 8px; }
+.flow-btn {
+  flex: 1; padding: 10px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: white;
+  cursor: pointer; text-align: center; font-size: 0.82rem;
+  font-weight: 500; transition: all 0.15s;
+}
+.flow-btn.selected { border-color: var(--coral); background: rgba(233,97,79,0.08); color: var(--coral); font-weight: 700; }
+.symptom-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.sym-chip {
+  padding: 6px 12px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: white;
+  cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
+}
+.sym-chip.selected { border-color: var(--coral); background: rgba(233,97,79,0.08); color: var(--coral); }
+.stat-box {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; text-align: center;
+}
+.stat-val { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; color: var(--coral); }
+.stat-label { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"></div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Home</a>
+    <a href="tracker.html" class="nav-item"><span class="nav-icon">📊</span> Health Log</a>
+    <a href="menopause.html" class="nav-item"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item active"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item"><span class="nav-icon">💬</span> Chat</a>
+    <a href="community.html" class="nav-item"><span class="nav-icon">👯‍♀️</span> My Circle</a>
+    <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏥</span> Hospitals</a>
+    <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reports</a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> Sign Out</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1>🌸 Period & Cycle Tracker</h1>
+      <p id="subtitle">Track your cycle — especially helpful during perimenopause when periods become irregular</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-3" id="statsRow" style="display:none;">
+      <div class="stat-box">
+        <div class="stat-val" id="avgCycle">—</div>
+        <div class="stat-label" id="avgLabel">Average cycle length (days)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="totalLogs">—</div>
+        <div class="stat-label" id="totalLabel">Periods tracked</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="lastPeriod">—</div>
+        <div class="stat-label" id="lastLabel">Days since last period</div>
+      </div>
+    </div>
+
+    <!-- Log new period -->
+    <div class="card">
+      <div class="card-label" id="addLabel">LOG A PERIOD</div>
+
+      <div class="grid-2" style="gap:12px;margin-bottom:14px;">
+        <div class="field">
+          <label id="startLabel">Start date</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="field">
+          <label id="endLabel">End date (optional)</label>
+          <input type="date" id="endDate">
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="flowLabel">Flow level</label>
+        <div class="flow-btns">
+          <div class="flow-btn" data-val="light" onclick="selectFlow(this)">🩸 Light</div>
+          <div class="flow-btn" data-val="medium" onclick="selectFlow(this)">🩸🩸 Medium</div>
+          <div class="flow-btn" data-val="heavy" onclick="selectFlow(this)">🩸🩸🩸 Heavy</div>
+          <div class="flow-btn" data-val="spotting" onclick="selectFlow(this)">· Spotting</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="symptomsLabel">Symptoms (select all that apply)</label>
+        <div class="symptom-chips">
+          <div class="sym-chip" data-val="cramps" onclick="toggleSym(this)">😣 Cramps</div>
+          <div class="sym-chip" data-val="bloating" onclick="toggleSym(this)">🫃 Bloating</div>
+          <div class="sym-chip" data-val="headache" onclick="toggleSym(this)">🤕 Headache</div>
+          <div class="sym-chip" data-val="back_pain" onclick="toggleSym(this)">🦴 Back pain</div>
+          <div class="sym-chip" data-val="fatigue" onclick="toggleSym(this)">😴 Fatigue</div>
+          <div class="sym-chip" data-val="mood_swings" onclick="toggleSym(this)">😤 Mood swings</div>
+          <div class="sym-chip" data-val="breast_pain" onclick="toggleSym(this)">💙 Breast tenderness</div>
+          <div class="sym-chip" data-val="nausea" onclick="toggleSym(this)">🤢 Nausea</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="notesLabel">Notes</label>
+        <input type="text" id="notes" placeholder="Anything unusual or worth noting...">
+      </div>
+
+      <div class="error-msg" id="errorBox"></div>
+      <div class="success-msg" id="successBox"></div>
+      <button class="btn-primary" id="logBtn" onclick="logCycle()">Log Period 🌸</button>
+    </div>
+
+    <!-- History -->
+    <div class="card">
+      <div class="card-label" id="historyLabel">PERIOD HISTORY</div>
+      <div id="historyList">
+        <div style="text-align:center;padding:20px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Perimenopause note -->
+    <div style="background:linear-gradient(135deg,rgba(233,97,79,0.08),rgba(244,167,54,0.05));border:1px solid rgba(233,97,79,0.15);border-radius:14px;padding:18px;">
+      <div style="font-weight:600;margin-bottom:8px;" id="noteTitle">🌙 About perimenopause and irregular periods</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.6;" id="noteText">
+        In perimenopause (typically 40s-50s), periods can become irregular — shorter, longer, heavier, lighter, or skipped entirely.
+        This is completely normal. However, if you bleed after 12 months of no periods, or notice unusually heavy bleeding, please consult your doctor.
+        Tracking your cycle helps you understand your body's changes during this transition.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+let selectedFlow = "medium";
+let selectedSymptoms = [];
+
+// Set today's date as default
+document.getElementById("startDate").value = new Date().toISOString().split("T")[0];
+
+if (lang === "hi") {
+  document.getElementById("subtitle").textContent = "अपना cycle track करें — perimenopause में irregular periods को समझना जरूरी है";
+  document.getElementById("addLabel").textContent = "PERIOD LOG करें";
+  document.getElementById("startLabel").textContent = "शुरू की date";
+  document.getElementById("endLabel").textContent = "खत्म की date (optional)";
+  document.getElementById("flowLabel").textContent = "Flow कितना था";
+  document.getElementById("symptomsLabel").textContent = "Symptoms (सब select करें)";
+  document.getElementById("notesLabel").textContent = "Notes";
+  document.getElementById("logBtn").textContent = "Period Log करें 🌸";
+  document.getElementById("historyLabel").textContent = "PERIOD HISTORY";
+  document.getElementById("avgLabel").textContent = "Average cycle length (दिन)";
+  document.getElementById("totalLabel").textContent = "Track किए periods";
+  document.getElementById("lastLabel").textContent = "आखिरी period के दिन";
+  document.getElementById("noteTitle").textContent = "🌙 Perimenopause और irregular periods के बारे में";
+  document.getElementById("noteText").textContent = "Perimenopause में periods irregular हो जाते हैं — छोटे, लंबे, ज्यादा, कम, या skip भी हो सकते हैं। यह completely normal है। लेकिन अगर 12 महीने के बाद bleeding हो, या बहुत ज्यादा bleeding हो, तो doctor से मिलें।";
+}
+
+function selectFlow(el) {
+  document.querySelectorAll(".flow-btn").forEach(b => b.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedFlow = el.dataset.val;
+}
+
+function toggleSym(el) {
+  el.classList.toggle("selected");
+  const val = el.dataset.val;
+  if (selectedSymptoms.includes(val)) {
+    selectedSymptoms = selectedSymptoms.filter(s => s !== val);
+  } else {
+    selectedSymptoms.push(val);
+  }
+}
+
+async function loadHistory() {
+  const r = await apiCall("/api/cycle/history", { auth: true });
+  if (!r || !r.success) return;
+
+  // Show stats
+  if (r.logs && r.logs.length > 0) {
+    document.getElementById("statsRow").style.display = "grid";
+    document.getElementById("totalLogs").textContent = r.logs.length;
+    if (r.avg_cycle_days) document.getElementById("avgCycle").textContent = r.avg_cycle_days;
+    if (r.logs[0] && r.logs[0].period_start) {
+      const lastDate = new Date(r.logs[0].period_start);
+      const today = new Date();
+      const diff = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+      document.getElementById("lastPeriod").textContent = diff;
+    }
+  }
+
+  const el = document.getElementById("historyList");
+  if (!r.logs || !r.logs.length) {
+    el.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-dim);">
+      <div style="font-size:3rem;margin-bottom:12px;">🌸</div>
+      <div style="font-weight:600;">${lang==="hi"?"अभी कोई period log नहीं है":"No periods logged yet"}</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = r.logs.map(l => `
+    <div class="cycle-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:600;font-size:0.95rem;">${l.period_start} ${l.period_end ? "→ " + l.period_end : ""}</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);margin-top:3px;">
+            ${l.flow_level || "medium"} flow ${l.symptoms ? "· " + l.symptoms.replace(/_/g," ") : ""}
+          </div>
+          ${l.notes ? `<div style="font-size:0.82rem;color:var(--text-dim);margin-top:2px;font-style:italic;">${l.notes}</div>` : ""}
+        </div>
+        <div style="font-size:1.5rem;">🌸</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function logCycle() {
+  const startDate = document.getElementById("startDate").value;
+  if (!startDate) {
+    showError(document.getElementById("errorBox"), lang==="hi"?"Start date select करें।":"Please select a start date.");
+    return;
+  }
+  const btn = document.getElementById("logBtn");
+  btn.disabled = true;
+  const r = await apiCall("/api/cycle/log", {
+    method: "POST", auth: true,
+    body: {
+      period_start: startDate,
+      period_end: document.getElementById("endDate").value || null,
+      flow_level: selectedFlow,
+      symptoms: selectedSymptoms.join(", "),
+      notes: document.getElementById("notes").value,
+    }
+  });
+  if (r && r.success) {
+    showSuccess(document.getElementById("successBox"), lang==="hi"?"✅ Period log हो गया!":"✅ Period logged!");
+    loadHistory();
+  } else {
+    showError(document.getElementById("errorBox"), "Could not save. Try again.");
+  }
+  btn.disabled = false;
+}
+
+function signOut() { apiCall("/api/logout",{method:"POST",auth:true}); Auth.clear(); window.location.href="index.html"; }
+loadHistory();
+</script>
+</body>
+</html>

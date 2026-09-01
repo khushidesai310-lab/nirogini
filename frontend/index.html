@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nirogini — Because when she's well, everyone's well</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.lang-page {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px; text-align: center;
+}
+.brand-logo { width: 120px; height: 120px; margin: 0 auto 16px; }
+.brand-title {
+  font-family: var(--font-display); font-size: 2.8rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--coral), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 6px; letter-spacing: 0.04em;
+}
+.brand-sub { font-size: 0.85rem; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+.brand-tagline { font-size: 1rem; color: var(--text-dim); margin-bottom: 48px; line-height: 1.6; }
+.lang-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 32px; }
+.lang-card {
+  width: 200px; padding: 32px 24px;
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: 20px; cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lang-card:hover { border-color: var(--coral); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(233,97,79,0.2); }
+.lang-flag { font-size: 3rem; margin-bottom: 12px; }
+.lang-name { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+.lang-sub { font-size: 0.85rem; color: var(--text-dim); }
+.already-account { font-size: 0.9rem; color: var(--text-dim); }
+.already-account a { color: var(--coral); font-weight: 600; }
+.floating { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden; z-index:-1; }
+.float-item { position:absolute; opacity:0.05; animation: floatUp 10s ease-in-out infinite; }
+@keyframes floatUp { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-30px) rotate(8deg)} }
+</style>
+</head>
+<body>
+<div class="floating">
+  <span class="float-item" style="left:10%;top:20%;font-size:2rem;animation-delay:0s">🌸</span>
+  <span class="float-item" style="left:80%;top:15%;font-size:1.5rem;animation-delay:1.5s">💙</span>
+  <span class="float-item" style="left:20%;top:70%;font-size:1.8rem;animation-delay:3s">🌿</span>
+  <span class="float-item" style="left:70%;top:60%;font-size:1.5rem;animation-delay:4.5s">✨</span>
+  <span class="float-item" style="left:50%;top:30%;font-size:2rem;animation-delay:6s">🌸</span>
+</div>
+<div class="lang-page">
+  <img src="images/nirogini_logo.png" class="brand-logo" alt="Nirogini Logo" style="border-radius:16px;object-fit:contain;">
+  <div class="brand-title">NIROGINI</div>
+  <div class="brand-sub">wellness. wisdom. vitality.</div>
+  <div class="brand-tagline">
+    Because when she's well, everyone's well<br>
+    <span style="font-size:0.9rem;">जब वो ठीक है, सब ठीक है</span>
+  </div>
+  <div class="lang-cards">
+    <div class="lang-card" onclick="selectLanguage('en')">
+      <div class="lang-flag">🇬🇧</div>
+      <div class="lang-name">English</div>
+      <div class="lang-sub">Continue in English</div>
+    </div>
+    <div class="lang-card" onclick="selectLanguage('hi')">
+      <div class="lang-flag">🇮🇳</div>
+      <div class="lang-name">हिंदी</div>
+      <div class="lang-sub">हिंदी में जारी रखें</div>
+    </div>
+  </div>
+  <div class="already-account">
+    Already have an account? <a href="login.html">Sign in</a>
+    &nbsp;|&nbsp; पहले से account है? <a href="login.html">Login करें</a>
+  </div>
+</div>
+<script>
+function selectLanguage(lang) {
+  localStorage.setItem("nirogini_lang", lang);
+  window.location.href = "signup.html";
+}
+if (localStorage.getItem("nirogini_token")) window.location.href = "dashboard.html";
+</script>
+</body>
+</html>

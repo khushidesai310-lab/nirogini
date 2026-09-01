@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Circle — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"></div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Home</a>
+    <a href="tracker.html" class="nav-item"><span class="nav-icon">📊</span> Health Log</a>
+    <a href="menopause.html" class="nav-item"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item"><span class="nav-icon">💬</span> Chat</a>
+    <a href="community.html" class="nav-item active"><span class="nav-icon">👯‍♀️</span> My Circle</a>
+    <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏥</span> Hospitals</a>
+    <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reports</a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> Sign Out</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1 id="pageTitle">👯‍♀️ My Circle</h1>
+      <p id="pageSubtitle">Stay healthy together — see how your friends are doing!</p>
+    </div>
+
+    <!-- Add friend -->
+    <div class="card">
+      <div class="card-label" id="addFriendLabel">ADD A FRIEND OR FAMILY MEMBER</div>
+      <p id="addFriendDesc" style="font-size:0.88rem;color:var(--text-dim);margin-bottom:16px;">
+        Invite your mom, sister, or friend to Nirogini! You'll be able to cheer each other on 🌸
+      </p>
+      <div style="display:flex;gap:10px;">
+        <input type="email" id="friendEmail" placeholder="Enter their email address" style="flex:1;">
+        <button class="btn-primary" id="addBtn" onclick="addFriend()" style="width:auto;padding:12px 20px;">Add 💙</button>
+      </div>
+      <div class="error-msg" id="addError"></div>
+      <div class="success-msg" id="addSuccess"></div>
+    </div>
+
+    <!-- Pending requests -->
+    <div class="card" id="requestsCard" style="display:none;">
+      <div class="card-label" id="requestsLabel">FRIEND REQUESTS</div>
+      <div id="requestsList"></div>
+    </div>
+
+    <!-- Community feed -->
+    <div class="card">
+      <div class="card-label" id="feedLabel">YOUR CIRCLE'S PROGRESS</div>
+      <div id="feedContent">
+        <div style="text-align:center;padding:20px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Leaderboard tip -->
+    <div style="background:linear-gradient(135deg,rgba(233,97,79,0.08),rgba(244,167,54,0.05));border:1px solid rgba(233,97,79,0.15);border-radius:16px;padding:20px;text-align:center;">
+      <div style="font-size:1.5rem;margin-bottom:8px;">🏆</div>
+      <div style="font-family:var(--font-display);font-weight:700;margin-bottom:6px;" id="leaderTip">Earn more points to climb the leaderboard!</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);" id="leaderSub">Log daily, complete challenges, and invite friends to earn bonus points</div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+
+if (lang === "hi") {
+  document.getElementById("pageTitle").textContent = "👯‍♀️ My Circle";
+  document.getElementById("pageSubtitle").textContent = "साथ में healthy रहें — देखें आपकी friends कैसी कर रही हैं!";
+  document.getElementById("addFriendLabel").textContent = "FRIEND या FAMILY MEMBER जोड़ें";
+  document.getElementById("addFriendDesc").textContent = "अपनी मम्मी, बहन या सहेली को Nirogini पर invite करें! आप एक-दूसरे को encourage कर सकती हैं 🌸";
+  document.getElementById("friendEmail").placeholder = "उनका email address डालें";
+  document.getElementById("addBtn").textContent = "जोड़ें 💙";
+  document.getElementById("feedLabel").textContent = "आपके CIRCLE की PROGRESS";
+  document.getElementById("leaderTip").textContent = "Leaderboard में ऊपर आने के लिए ज्यादा points कमाएं!";
+  document.getElementById("leaderSub").textContent = "रोज log करें, challenges complete करें, और friends invite करें";
+}
+
+async function loadCommunity() {
+  // Load pending requests
+  const reqResult = await apiCall("/api/community/requests", { auth: true });
+  if (reqResult && reqResult.success && reqResult.requests.length > 0) {
+    document.getElementById("requestsCard").style.display = "block";
+    document.getElementById("requestsLabel").textContent = lang === "hi" ? "FRIEND REQUESTS" : "FRIEND REQUESTS";
+    document.getElementById("requestsList").innerHTML = reqResult.requests.map(r => `
+      <div class="friend-card">
+        <div class="friend-avatar">${r.name[0].toUpperCase()}</div>
+        <div class="friend-info">
+          <div class="friend-name">${r.name}</div>
+          <div class="friend-stats">${r.email}</div>
+        </div>
+        <button class="btn-ghost" onclick="acceptRequest(${r.id})" style="padding:8px 16px;font-size:0.82rem;">
+          ${lang === "hi" ? "Accept करें" : "Accept"} ✓
+        </button>
+      </div>
+    `).join("");
+  }
+
+  // Load community feed
+  const feedResult = await apiCall("/api/community/feed", { auth: true });
+  const feedEl = document.getElementById("feedContent");
+
+  if (!feedResult || !feedResult.success || feedResult.feed.length === 0) {
+    feedEl.innerHTML = `
+      <div style="text-align:center;padding:32px;color:var(--text-dim);">
+        <div style="font-size:3rem;margin-bottom:12px;">👯‍♀️</div>
+        <div style="font-weight:600;margin-bottom:8px;">${lang === "hi" ? "अभी आपके circle में कोई नहीं है" : "Your circle is empty for now"}</div>
+        <div style="font-size:0.88rem;">${lang === "hi" ? "ऊपर अपनी friends को add करें!" : "Add your friends above to get started!"}</div>
+      </div>
+    `;
+    return;
+  }
+
+  feedEl.innerHTML = feedResult.feed.map((f, i) => `
+    <div class="friend-card">
+      <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:var(--text-dim);width:28px;">${i + 1}</div>
+      <div class="friend-avatar">${f.name[0].toUpperCase()}</div>
+      <div class="friend-info">
+        <div class="friend-name">${f.name}</div>
+        <div class="friend-stats">${f.level_emoji} ${f.level_name} • ${f.points} pts • 🔥 ${f.streak_days} ${lang === "hi" ? "दिन" : "days"}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function addFriend() {
+  const email = document.getElementById("friendEmail").value.trim();
+  if (!email) return;
+  const btn = document.getElementById("addBtn");
+  btn.disabled = true;
+  const result = await apiCall("/api/community/add-friend", {
+    method: "POST", auth: true, body: { email }
+  });
+  if (result && result.success) {
+    showSuccess(document.getElementById("addSuccess"), result.message);
+    document.getElementById("friendEmail").value = "";
+  } else {
+    showError(document.getElementById("addError"), (result && result.error) || "Could not send request.");
+  }
+  btn.disabled = false;
+}
+
+async function acceptRequest(requesterId) {
+  await apiCall("/api/community/accept", {
+    method: "POST", auth: true, body: { requester_id: requesterId }
+  });
+  loadCommunity();
+}
+
+function signOut() {
+  apiCall("/api/logout", { method: "POST", auth: true });
+  Auth.clear();
+  window.location.href = "index.html";
+}
+
+loadCommunity();
+</script>
+</body>
+</html>

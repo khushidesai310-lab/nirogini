@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.greeting-card {
+  background: linear-gradient(135deg, var(--coral), #D4503E);
+  color: white; border-radius: 20px; padding: 28px;
+  margin-bottom: 20px; position: relative; overflow: hidden;
+}
+.greeting-card::after {
+  content: "🌸";
+  position: absolute; right: 24px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 4rem; opacity: 0.2;
+}
+.greeting-name { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+.greeting-msg { font-size: 0.95rem; opacity: 0.9; line-height: 1.6; max-width: 80%; }
+
+.goal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
+
+.weekly-challenge {
+  background: linear-gradient(135deg, rgba(244,167,54,0.1), rgba(233,97,79,0.05));
+  border: 1px solid rgba(244,167,54,0.3);
+  border-radius: 16px; padding: 20px; margin-bottom: 20px;
+}
+.challenge-title { font-family: var(--font-display); font-weight: 700; margin-bottom: 4px; color: var(--gold); }
+
+.tip-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px; margin-bottom: 12px;
+}
+.tip-icon { font-size: 1.5rem; margin-bottom: 8px; }
+.tip-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+.tip-text { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+
+.chart-container { height: 200px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"></div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item active"><span class="nav-icon">🏠</span> <span id="nav-home">Home</span></a>
+    <a href="tracker.html" class="nav-item"><span class="nav-icon">📊</span> <span id="nav-tracker">Health Log</span></a>
+    <a href="menopause.html" class="nav-item"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item"><span class="nav-icon">💬</span> <span id="nav-chat">Chat</span></a>
+    <a href="community.html" class="nav-item"><span class="nav-icon">👯‍♀️</span> <span id="nav-community">My Circle</span></a>
+    <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏥</span> <span id="nav-hospitals">Hospitals</span></a>
+    <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> <span id="nav-reports">Reports</span></a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> <span id="nav-signout">Sign Out</span></a>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main-content">
+    <!-- Greeting -->
+    <div class="greeting-card">
+      <div class="greeting-name" id="greetingName">Good morning! 🌸</div>
+      <div class="greeting-msg" id="greetingMsg">Loading your personalised message...</div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid-3" id="statsRow">
+      <div class="card" style="text-align:center;">
+        <div class="card-label" id="pointsLabel">Points</div>
+        <div class="card-value" id="pointsValue" style="color:var(--coral);">—</div>
+        <div id="levelBadge" style="margin-top:8px;"></div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-label" id="streakLabel">Day Streak</div>
+        <div class="card-value" id="streakValue" style="color:var(--gold);">—</div>
+        <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px;">🔥 Keep it up!</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-label">Next Level</div>
+        <div id="nextLevelInfo" style="font-size:0.9rem;color:var(--text-dim);margin-top:8px;">—</div>
+        <div class="progress-bar-wrap" style="margin-top:12px;">
+          <div class="progress-bar-fill" id="levelProgress" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Goals -->
+    <div class="card">
+      <div class="card-label" id="goalsLabel">TODAY'S GOALS</div>
+      <div class="goal-grid" id="goalGrid">
+        <div class="goal-card" id="waterGoal">
+          <div class="goal-emoji">💧</div>
+          <div class="goal-title" id="waterTitle">Water</div>
+          <div class="goal-sub" id="waterSub">8 glasses goal</div>
+          <div class="goal-progress">
+            <div class="goal-count" id="waterCount">0</div>
+            <div class="progress-bar-wrap" style="flex:1;">
+              <div class="progress-bar-fill" id="waterBar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="goal-card" id="stepsGoal">
+          <div class="goal-emoji">👟</div>
+          <div class="goal-title" id="stepsTitle">Steps</div>
+          <div class="goal-sub" id="stepsSub">5000 steps goal</div>
+          <div class="goal-progress">
+            <div class="goal-count" id="stepsCount">0</div>
+            <div class="progress-bar-wrap" style="flex:1;">
+              <div class="progress-bar-fill" id="stepsBar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="goal-card" id="sleepGoal">
+          <div class="goal-emoji">😴</div>
+          <div class="goal-title" id="sleepTitle">Sleep</div>
+          <div class="goal-sub" id="sleepSub">7 hours goal</div>
+          <div class="goal-progress">
+            <div class="goal-count" id="sleepCount">0</div>
+            <div class="progress-bar-wrap" style="flex:1;">
+              <div class="progress-bar-fill" id="sleepBar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="goal-card" id="moodGoal">
+          <div class="goal-emoji">😊</div>
+          <div class="goal-title" id="moodTitle">Mood</div>
+          <div class="goal-sub" id="moodSub">How are you feeling?</div>
+          <div class="goal-count" id="moodCount" style="font-size:1.5rem;">—</div>
+        </div>
+      </div>
+      <a href="tracker.html" style="display:block;text-align:center;margin-top:16px;">
+        <button class="btn-primary" id="logTodayBtn" style="max-width:200px;">Log today 📊</button>
+      </a>
+    </div>
+
+    <!-- Daily Tips from AI -->
+    <div class="card" id="tipsCard">
+      <div class="card-label" id="tipsLabel">YOUR PLAN FOR TODAY</div>
+      <div id="tipsContent">
+        <div style="text-align:center;padding:20px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Weekly challenge -->
+    <div class="weekly-challenge">
+      <div class="challenge-title" id="challengeTitle">🎯 This Week's Challenge</div>
+      <div id="challengeDesc" style="font-size:0.9rem;color:var(--text-dim);margin-top:4px;">Log your health every day this week and earn 75 bonus points!</div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-label" id="chartLabel">YOUR HEALTH TREND (LAST 7 DAYS)</div>
+      <div class="chart-container">
+        <canvas id="healthChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+const user = Auth.getUser();
+
+// Apply translations
+if (lang === "hi") {
+  document.getElementById("nav-home").textContent = "Home";
+  document.getElementById("nav-tracker").textContent = "Health Log";
+  document.getElementById("nav-chat").textContent = "Chat";
+  document.getElementById("nav-community").textContent = "My Circle";
+  document.getElementById("nav-hospitals").textContent = "Hospital खोजें";
+  document.getElementById("nav-reports").textContent = "Reports";
+  document.getElementById("nav-signout").textContent = "Sign Out";
+  document.getElementById("pointsLabel").textContent = "Points";
+  document.getElementById("streakLabel").textContent = "दिन की Streak";
+  document.getElementById("goalsLabel").textContent = "आज के GOALS";
+  document.getElementById("waterTitle").textContent = "पानी";
+  document.getElementById("waterSub").textContent = "8 गिलास goal";
+  document.getElementById("stepsTitle").textContent = "कदम";
+  document.getElementById("stepsSub").textContent = "5000 कदम goal";
+  document.getElementById("sleepTitle").textContent = "नींद";
+  document.getElementById("sleepSub").textContent = "7 घंटे goal";
+  document.getElementById("moodTitle").textContent = "मूड";
+  document.getElementById("moodSub").textContent = "आज कैसा feel हो रहा है?";
+  document.getElementById("logTodayBtn").textContent = "आज का log करें 📊";
+  document.getElementById("tipsLabel").textContent = "आज का आपका PLAN";
+  document.getElementById("chartLabel").textContent = "आपका HEALTH TREND (पिछले 7 दिन)";
+  document.getElementById("challengeTitle").textContent = "🎯 इस हफ्ते का Challenge";
+  document.getElementById("challengeDesc").textContent = "इस हफ्ते हर दिन health log करें और 75 bonus points पाएं!";
+}
+
+async function loadDashboard() {
+  // Load greeting
+  // Always use actual user name from auth
+  const displayName = user ? user.name.split(" ")[0] + " ji" : "there";
+  document.getElementById("greetingName").textContent = displayName + " 🌸";
+
+  const greetResult = await apiCall(`/api/companion/greeting?lang=${lang}`, { auth: true });
+  if (greetResult && greetResult.success) {
+    document.getElementById("greetingMsg").textContent = greetResult.greeting;
+  } else {
+    document.getElementById("greetingMsg").textContent = lang === "hi"
+      ? "आज आप कैसी हैं? अपना ख्याल रखें 💙"
+      : "How are you doing today? Take care of yourself 💙";
+  }
+
+  // Load stats
+  const statsResult = await apiCall("/api/health/stats", { auth: true });
+  if (statsResult && statsResult.success) {
+    const s = statsResult.stats;
+    document.getElementById("pointsValue").textContent = s.points || 0;
+    document.getElementById("streakValue").textContent = (s.streak_days || 0) + (lang === "hi" ? " दिन 🔥" : " days 🔥");
+    document.getElementById("levelBadge").innerHTML = `<span class="level-badge">${s.level_emoji} ${s.level_name}</span>`;
+    if (s.next_level) {
+      document.getElementById("nextLevelInfo").textContent = `${s.next_level.points_needed} pts to ${s.next_level.name}`;
+      const pct = Math.max(5, 100 - (s.next_level.points_needed / 100) * 100);
+      document.getElementById("levelProgress").style.width = pct + "%";
+    }
+  }
+
+  // Load today's log
+  const todayResult = await apiCall("/api/health/today", { auth: true });
+  if (todayResult && todayResult.success && todayResult.log) {
+    const log = todayResult.log;
+    const water = log.water_glasses || 0;
+    const steps = log.steps || 0;
+    const sleep = log.sleep_hours || 0;
+    const mood = log.mood || 0;
+
+    document.getElementById("waterCount").textContent = water + (lang === "hi" ? " गिलास" : " glasses");
+    document.getElementById("waterBar").style.width = Math.min(100, (water / 8) * 100) + "%";
+    if (water >= 8) document.getElementById("waterGoal").classList.add("completed");
+
+    document.getElementById("stepsCount").textContent = steps.toLocaleString();
+    document.getElementById("stepsBar").style.width = Math.min(100, (steps / 5000) * 100) + "%";
+    if (steps >= 5000) document.getElementById("stepsGoal").classList.add("completed");
+
+    document.getElementById("sleepCount").textContent = sleep + (lang === "hi" ? " घंटे" : " hrs");
+    document.getElementById("sleepBar").style.width = Math.min(100, (sleep / 7) * 100) + "%";
+    if (sleep >= 7) document.getElementById("sleepGoal").classList.add("completed");
+
+    const moodEmojis = ["", "😔", "😕", "😊", "😄", "🤩"];
+    document.getElementById("moodCount").textContent = mood ? moodEmojis[mood] : "—";
+  }
+
+  // Load daily tips
+  const tipsResult = await apiCall(`/api/recommendations/daily?lang=${lang}`, { auth: true });
+  if (tipsResult && tipsResult.success && tipsResult.plan) {
+    const plan = tipsResult.plan;
+    if (plan.error) {
+      document.getElementById("tipsContent").innerHTML = `<p style="color:var(--text-dim);">${plan.error}</p>`;
+    } else {
+      document.getElementById("tipsContent").innerHTML = `
+        <div class="tip-card"><div class="tip-icon">💧</div><div class="tip-title">${lang === "hi" ? "पानी" : "Hydration"}</div><div class="tip-text">${plan.water_tip || ""}</div></div>
+        <div class="tip-card"><div class="tip-icon">🥘</div><div class="tip-title">${lang === "hi" ? "खाना" : "Food"}</div><div class="tip-text">${plan.food_tip || ""}</div></div>
+        <div class="tip-card"><div class="tip-icon">🚶‍♀️</div><div class="tip-title">${lang === "hi" ? "चलना" : "Movement"}</div><div class="tip-text">${plan.movement_tip || ""}</div></div>
+        <div class="tip-card"><div class="tip-icon">🌸</div><div class="tip-title">${lang === "hi" ? "Self care" : "Self Care"}</div><div class="tip-text">${plan.self_care || ""}</div></div>
+        ${plan.family_recipe ? `
+        <div class="tip-card" style="background:linear-gradient(135deg,rgba(244,167,54,0.05),rgba(233,97,79,0.03));border-color:rgba(244,167,54,0.2);">
+          <div class="tip-icon">👨‍🍳</div>
+          <div class="tip-title">${lang === "hi" ? "आज की recipe" : "Today's Family Recipe"}: ${plan.family_recipe.name}</div>
+          <div class="tip-text">${plan.family_recipe.why}</div>
+          <div style="margin-top:8px;font-size:0.82rem;color:var(--text-dim);">${plan.family_recipe.quick_method}</div>
+        </div>` : ""}
+      `;
+    }
+  }
+
+  // Load chart
+  const histResult = await apiCall("/api/health/history?days=7", { auth: true });
+  if (histResult && histResult.success && histResult.history.length > 0) {
+    const labels = histResult.history.map(h => h.date.slice(5));
+    const waterData = histResult.history.map(h => h.water_glasses || 0);
+    const stepsData = histResult.history.map(h => (h.steps || 0) / 1000);
+
+    const ctx = document.getElementById("healthChart").getContext("2d");
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: lang === "hi" ? "पानी (गिलास)" : "Water (glasses)",
+            data: waterData,
+            borderColor: "#5BA4CF",
+            backgroundColor: "rgba(91,164,207,0.1)",
+            tension: 0.4, fill: true,
+          },
+          {
+            label: lang === "hi" ? "कदम (हजार में)" : "Steps (thousands)",
+            data: stepsData,
+            borderColor: "#E9614F",
+            backgroundColor: "rgba(233,97,79,0.1)",
+            tension: 0.4, fill: true,
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  } else {
+    document.getElementById("healthChart").parentElement.innerHTML =
+      `<p style="text-align:center;color:var(--text-dim);padding:20px;">${lang === "hi" ? "अभी तक कोई data नहीं — आज से log करना शुरू करें!" : "No data yet — start logging today to see your trends!"}</p>`;
+  }
+}
+
+function signOut() {
+  apiCall("/api/logout", { method: "POST", auth: true });
+  Auth.clear();
+  window.location.href = "index.html";
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

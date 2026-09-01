@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menopause Tracker — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.symptom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px; margin-bottom: 24px;
+}
+.symptom-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px;
+}
+.symptom-icon { font-size: 1.6rem; margin-bottom: 6px; }
+.symptom-label { font-weight: 600; font-size: 0.85rem; margin-bottom: 10px; color: var(--text); }
+
+/* YES / NO style buttons */
+.yn-btns { display: flex; gap: 8px; }
+.yn-btn {
+  flex: 1; padding: 9px 8px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: white;
+  font-size: 0.82rem; cursor: pointer; text-align: center;
+  transition: all 0.15s; font-weight: 600;
+}
+.yn-btn.yes.selected { border-color: var(--coral); background: rgba(233,97,79,0.1); color: var(--coral); }
+.yn-btn.no.selected  { border-color: var(--mint);  background: rgba(76,175,136,0.1);  color: var(--mint); }
+
+/* Intensity with wrap fix */
+.intensity-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.intensity-btn {
+  flex: 1; min-width: 48px; padding: 8px 4px;
+  border-radius: 8px; border: 1.5px solid var(--border);
+  background: white; font-size: 0.75rem; cursor: pointer;
+  text-align: center; transition: all 0.15s; font-weight: 500;
+}
+.intensity-btn.selected {
+  border-color: var(--coral); background: rgba(233,97,79,0.1);
+  color: var(--coral); font-weight: 700;
+}
+
+.info-banner {
+  background: linear-gradient(135deg, rgba(233,97,79,0.08), rgba(244,167,54,0.05));
+  border: 1px solid rgba(233,97,79,0.2); border-radius: 14px;
+  padding: 18px; margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">
+        <img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;">
+      </div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Home</a>
+    <a href="tracker.html" class="nav-item"><span class="nav-icon">📊</span> Health Log</a>
+    <a href="menopause.html" class="nav-item active"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item"><span class="nav-icon">💬</span> Chat</a>
+    <a href="community.html" class="nav-item"><span class="nav-icon">👯‍♀️</span> My Circle</a>
+    <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏥</span> Hospitals</a>
+    <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reports</a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> Sign Out</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1>🌙 Menopause Symptom Tracker</h1>
+      <p id="pageSubtitle">Track your symptoms daily — understanding patterns helps you and your doctor</p>
+    </div>
+
+    <div class="info-banner">
+      <div style="font-weight:600;margin-bottom:6px;">💙 You are not alone</div>
+      <div style="font-size:0.88rem;color:var(--text-dim);line-height:1.6;" id="infoText">
+        Perimenopause and menopause affect every woman differently. Tracking your symptoms helps identify
+        patterns, understand triggers, and have better conversations with your doctor.
+        Your data stays completely private.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">TODAY'S SYMPTOMS</div>
+
+      <div class="symptom-grid">
+
+        <!-- Hot flashes — count -->
+        <div class="symptom-card">
+          <div class="symptom-icon">🔥</div>
+          <div class="symptom-label" id="hfLabel">Hot Flashes today</div>
+          <div class="intensity-btns" id="hfBtns">
+            <div class="intensity-btn" data-val="0" onclick="selectVal('hf',0,this)">None</div>
+            <div class="intensity-btn" data-val="1" onclick="selectVal('hf',1,this)">1–2</div>
+            <div class="intensity-btn" data-val="3" onclick="selectVal('hf',3,this)">3–5</div>
+            <div class="intensity-btn" data-val="6" onclick="selectVal('hf',6,this)">6+</div>
+          </div>
+        </div>
+
+        <!-- Night sweats — yes/no -->
+        <div class="symptom-card">
+          <div class="symptom-icon">🌊</div>
+          <div class="symptom-label" id="nsLabel">Night Sweats</div>
+          <div class="yn-btns">
+            <div class="yn-btn yes" id="nsYes" onclick="selectYN('ns',1)">✓ Yes</div>
+            <div class="yn-btn no selected" id="nsNo"  onclick="selectYN('ns',0)">✗ No</div>
+          </div>
+        </div>
+
+        <!-- Mood -->
+        <div class="symptom-card">
+          <div class="symptom-icon">😊</div>
+          <div class="symptom-label" id="moodLabel">Mood today</div>
+          <div class="intensity-btns" id="moodBtns">
+            <div class="intensity-btn" data-val="1" onclick="selectVal('mood',1,this)">😔</div>
+            <div class="intensity-btn" data-val="2" onclick="selectVal('mood',2,this)">😕</div>
+            <div class="intensity-btn" data-val="3" onclick="selectVal('mood',3,this)">😊</div>
+            <div class="intensity-btn" data-val="4" onclick="selectVal('mood',4,this)">😄</div>
+            <div class="intensity-btn" data-val="5" onclick="selectVal('mood',5,this)">🤩</div>
+          </div>
+        </div>
+
+        <!-- Sleep quality -->
+        <div class="symptom-card">
+          <div class="symptom-icon">😴</div>
+          <div class="symptom-label" id="sleepLabel">Sleep Quality</div>
+          <div class="intensity-btns" id="sleepBtns">
+            <div class="intensity-btn" data-val="1" onclick="selectVal('sleepQ',1,this)">Poor</div>
+            <div class="intensity-btn" data-val="2" onclick="selectVal('sleepQ',2,this)">Fair</div>
+            <div class="intensity-btn" data-val="3" onclick="selectVal('sleepQ',3,this)">Good</div>
+            <div class="intensity-btn" data-val="4" onclick="selectVal('sleepQ',4,this)">Great</div>
+          </div>
+        </div>
+
+        <!-- Joint pain — yes/no + severity on yes -->
+        <div class="symptom-card">
+          <div class="symptom-icon">🦴</div>
+          <div class="symptom-label" id="jpLabel">Joint Pain</div>
+          <div class="yn-btns" style="margin-bottom:8px;">
+            <div class="yn-btn yes" id="jpYes" onclick="selectYN('jp',1)">✓ Yes</div>
+            <div class="yn-btn no selected" id="jpNo"  onclick="selectYN('jp',0)">✗ No</div>
+          </div>
+          <div id="jpSeverity" style="display:none;">
+            <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px;" id="jpSevLabel">How severe?</div>
+            <div class="intensity-btns" id="jpBtns">
+              <div class="intensity-btn" data-val="1" onclick="selectVal('jpSev',1,this)">Mild</div>
+              <div class="intensity-btn" data-val="2" onclick="selectVal('jpSev',2,this)">Moderate</div>
+              <div class="intensity-btn" data-val="3" onclick="selectVal('jpSev',3,this)">Severe</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brain fog — yes/no -->
+        <div class="symptom-card">
+          <div class="symptom-icon">🧠</div>
+          <div class="symptom-label" id="bfLabel">Brain Fog</div>
+          <div class="yn-btns">
+            <div class="yn-btn yes" id="bfYes" onclick="selectYN('bf',1)">✓ Yes</div>
+            <div class="yn-btn no selected" id="bfNo"  onclick="selectYN('bf',0)">✗ No</div>
+          </div>
+        </div>
+
+        <!-- Anxiety — yes/no -->
+        <div class="symptom-card">
+          <div class="symptom-icon">💭</div>
+          <div class="symptom-label" id="axLabel">Anxiety / Worry</div>
+          <div class="yn-btns">
+            <div class="yn-btn yes" id="axYes" onclick="selectYN('ax',1)">✓ Yes</div>
+            <div class="yn-btn no selected" id="axNo"  onclick="selectYN('ax',0)">✗ No</div>
+          </div>
+        </div>
+
+        <!-- Headache — yes/no -->
+        <div class="symptom-card">
+          <div class="symptom-icon">🤕</div>
+          <div class="symptom-label" id="haLabel">Headache</div>
+          <div class="yn-btns">
+            <div class="yn-btn yes" id="haYes" onclick="selectYN('ha',1)">✓ Yes</div>
+            <div class="yn-btn no selected" id="haNo"  onclick="selectYN('ha',0)">✗ No</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Notes -->
+      <div class="field">
+        <label id="notesLabel">Any notes for today?</label>
+        <textarea id="notes" rows="2" style="border-radius:12px;"
+          placeholder="Anything specific you noticed today..."></textarea>
+      </div>
+
+      <div class="error-msg" id="errorBox"></div>
+      <div class="success-msg" id="successBox"></div>
+      <button class="btn-primary" id="saveBtn" onclick="saveLog()">Save today's symptoms 🌙</button>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-label">YOUR SYMPTOM TRENDS (LAST 30 DAYS)</div>
+      <div style="height:220px;"><canvas id="symptomChart"></canvas></div>
+    </div>
+
+    <!-- Tips -->
+    <div class="card">
+      <div class="card-label">MANAGING YOUR SYMPTOMS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:var(--surface-2);border-radius:12px;padding:14px;">
+          <div style="font-size:1.3rem;margin-bottom:6px;">🔥</div>
+          <div style="font-weight:600;font-size:0.88rem;margin-bottom:4px;">Hot Flashes</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);">Dress in layers, avoid spicy food and caffeine, keep a fan nearby, stay hydrated.</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:12px;padding:14px;">
+          <div style="font-size:1.3rem;margin-bottom:6px;">😴</div>
+          <div style="font-weight:600;font-size:0.88rem;margin-bottom:4px;">Sleep Issues</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);">Keep bedroom cool, avoid screens before bed, light yoga or stretching in the evening.</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:12px;padding:14px;">
+          <div style="font-size:1.3rem;margin-bottom:6px;">😊</div>
+          <div style="font-weight:600;font-size:0.88rem;margin-bottom:4px;">Mood Changes</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);">Regular exercise, talking to someone you trust, and spending time outdoors can help.</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:12px;padding:14px;">
+          <div style="font-size:1.3rem;margin-bottom:6px;">🦴</div>
+          <div style="font-weight:600;font-size:0.88rem;margin-bottom:4px;">Joint Pain</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);">Calcium and Vitamin D are important. Gentle yoga, warm compresses, and staying active help.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+
+// State
+let vals = { hf:0, ns:0, mood:3, sleepQ:3, jp:0, jpSev:0, bf:0, ax:0, ha:0 };
+
+if (lang === "hi") {
+  document.getElementById("pageSubtitle").textContent = "रोज अपने symptoms track करें — patterns समझने से आप और आपके doctor को help होती है";
+  document.getElementById("hfLabel").textContent = "Hot Flashes (आज)";
+  document.getElementById("nsLabel").textContent = "रात को पसीना";
+  document.getElementById("moodLabel").textContent = "आज का mood";
+  document.getElementById("sleepLabel").textContent = "नींद की quality";
+  document.getElementById("jpLabel").textContent = "जोड़ों में दर्द";
+  document.getElementById("jpSevLabel").textContent = "कितना तेज?";
+  document.getElementById("bfLabel").textContent = "Brain Fog";
+  document.getElementById("axLabel").textContent = "Anxiety / घबराहट";
+  document.getElementById("haLabel").textContent = "सिरदर्द";
+  document.getElementById("notesLabel").textContent = "आज के notes";
+  document.getElementById("saveBtn").textContent = "आज के symptoms save करें 🌙";
+  // Update yes/no buttons
+  document.querySelectorAll(".yn-btn.yes").forEach(b => b.textContent = "✓ हाँ");
+  document.querySelectorAll(".yn-btn.no").forEach(b => b.textContent = "✗ नहीं");
+}
+
+function selectVal(key, value, el) {
+  const groupId = el.closest('.intensity-btns').id;
+  document.querySelectorAll(`#${groupId} .intensity-btn`).forEach(b => b.classList.remove("selected"));
+  el.classList.add("selected");
+  vals[key] = value;
+}
+
+function selectYN(sym, value) {
+  vals[sym] = value;
+  const yesBtn = document.getElementById(sym + "Yes");
+  const noBtn  = document.getElementById(sym + "No");
+  yesBtn.classList.toggle("selected", value === 1);
+  noBtn.classList.toggle("selected",  value === 0);
+
+  // Show severity for joint pain when yes
+  if (sym === "jp") {
+    document.getElementById("jpSeverity").style.display = value ? "block" : "none";
+    if (!value) vals.jpSev = 0;
+  }
+}
+
+// Load today's log
+async function loadTodayLog() {
+  const r = await apiCall("/api/menopause/today", { auth: true });
+  if (!r || !r.success || !Object.keys(r.log).length) return;
+  const l = r.log;
+  if (l.hot_flashes != null) { vals.hf = l.hot_flashes; document.querySelector(`#hfBtns [data-val="${l.hot_flashes}"]`)?.classList.add("selected"); }
+  if (l.night_sweats != null) selectYN("ns", l.night_sweats);
+  if (l.mood != null) { vals.mood = l.mood; document.querySelector(`#moodBtns [data-val="${l.mood}"]`)?.classList.add("selected"); }
+  if (l.sleep_quality != null) { vals.sleepQ = l.sleep_quality; document.querySelector(`#sleepBtns [data-val="${l.sleep_quality}"]`)?.classList.add("selected"); }
+  if (l.joint_pain != null) { selectYN("jp", l.joint_pain > 0 ? 1 : 0); if (l.joint_pain > 0) { vals.jpSev = l.joint_pain; document.querySelector(`#jpBtns [data-val="${l.joint_pain}"]`)?.classList.add("selected"); } }
+  if (l.brain_fog != null) selectYN("bf", l.brain_fog);
+  if (l.anxiety != null) selectYN("ax", l.anxiety);
+  if (l.notes) document.getElementById("notes").value = l.notes;
+}
+
+async function saveLog() {
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.textContent = lang === "hi" ? "Save हो रहा है..." : "Saving...";
+  const r = await apiCall("/api/menopause/log", {
+    method: "POST", auth: true,
+    body: {
+      hot_flashes: vals.hf,
+      night_sweats: vals.ns,
+      mood: vals.mood,
+      sleep_quality: vals.sleepQ,
+      joint_pain: vals.jp ? vals.jpSev || 1 : 0,
+      brain_fog: vals.bf,
+      anxiety: vals.ax,
+      notes: document.getElementById("notes").value,
+    }
+  });
+  if (r && r.success) {
+    showSuccess(document.getElementById("successBox"), lang === "hi" ? "✅ Symptoms save हो गए!" : "✅ Symptoms saved!");
+    loadChart();
+  } else {
+    showError(document.getElementById("errorBox"), "Could not save. Please try again.");
+  }
+  btn.disabled = false;
+  btn.textContent = lang === "hi" ? "आज के symptoms save करें 🌙" : "Save today's symptoms 🌙";
+}
+
+async function loadChart() {
+  const r = await apiCall("/api/menopause/history?days=30", { auth: true });
+  if (!r || !r.success || !r.history.length) return;
+  const labels = r.history.map(h => h.date.slice(5));
+  const ctx = document.getElementById("symptomChart").getContext("2d");
+  if (window._mChart) window._mChart.destroy();
+  window._mChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        { label: "Hot Flashes", data: r.history.map(h => h.hot_flashes||0), borderColor:"#E9614F", tension:0.4, fill:false },
+        { label: "Mood", data: r.history.map(h => h.mood||0), borderColor:"#F4A736", tension:0.4, fill:false },
+        { label: lang==="hi"?"नींद":"Sleep", data: r.history.map(h => h.sleep_quality||0), borderColor:"#5BA4CF", tension:0.4, fill:false },
+        { label: lang==="hi"?"Joint Pain":"Joint Pain", data: r.history.map(h => h.joint_pain||0), borderColor:"#8BA870", tension:0.4, fill:false },
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}}, scales:{y:{beginAtZero:true}} }
+  });
+}
+
+function signOut() { apiCall("/api/logout",{method:"POST",auth:true}); Auth.clear(); window.location.href="index.html"; }
+loadTodayLog();
+loadChart();
+</script>
+</body>
+</html>

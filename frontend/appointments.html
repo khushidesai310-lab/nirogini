@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appointments — Nirogini</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.appt-card {
+  border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px; margin-bottom: 12px; background: white;
+  border-left: 4px solid var(--coral);
+}
+.appt-card.past { border-left-color: var(--text-light); opacity: 0.7; }
+.appt-date { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--coral); }
+.appt-doctor { font-weight: 600; font-size: 0.95rem; margin-top: 4px; }
+.appt-details { font-size: 0.82rem; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+.appt-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn-small {
+  padding: 7px 14px; border-radius: 10px; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
+  background: var(--surface-2); transition: all 0.15s;
+}
+.btn-small:hover { border-color: var(--coral); color: var(--coral); }
+.btn-small.done { background: rgba(76,175,136,0.1); border-color: rgba(76,175,136,0.3); color: var(--mint); }
+.days-badge {
+  display: inline-block; padding: 3px 10px;
+  border-radius: 10px; font-size: 0.75rem; font-weight: 700;
+  background: rgba(233,97,79,0.1); color: var(--coral);
+}
+.questions-preview {
+  background: var(--surface-2); border-radius: 10px;
+  padding: 10px 12px; margin-top: 8px;
+  font-size: 0.82rem; color: var(--text-dim); line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><img src="images/nirogini_logo.png" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"></div>
+      <div class="sidebar-brand-name">Nirogini</div>
+    </div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Home</a>
+    <a href="tracker.html" class="nav-item"><span class="nav-icon">📊</span> Health Log</a>
+    <a href="menopause.html" class="nav-item"><span class="nav-icon">🌙</span> Menopause</a>
+    <a href="medicines.html" class="nav-item"><span class="nav-icon">💊</span> Medicines</a>
+    <a href="cycle.html" class="nav-item"><span class="nav-icon">🌸</span> Cycle</a>
+    <a href="appointments.html" class="nav-item active"><span class="nav-icon">🗓️</span> Appointments</a>
+    <a href="companion.html" class="nav-item"><span class="nav-icon">💬</span> Chat</a>
+    <a href="community.html" class="nav-item"><span class="nav-icon">👯‍♀️</span> My Circle</a>
+    <a href="hospitals.html" class="nav-item"><span class="nav-icon">🏥</span> Hospitals</a>
+    <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reports</a>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" onclick="signOut()"><span class="nav-icon">👋</span> Sign Out</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1>🗓️ Doctor Appointments</h1>
+      <p id="subtitle">Keep track of upcoming appointments and what to discuss with your doctor</p>
+    </div>
+
+    <!-- Add appointment -->
+    <div class="card">
+      <div class="card-label" id="addLabel">ADD APPOINTMENT</div>
+
+      <div class="grid-2" style="gap:12px;margin-bottom:12px;">
+        <div class="field">
+          <label id="docLabel">Doctor's name</label>
+          <input type="text" id="docName" placeholder="e.g. Dr. Sharma, Dr. Patel">
+        </div>
+        <div class="field">
+          <label id="specLabel">Speciality</label>
+          <select id="speciality">
+            <option value="General Physician">General Physician</option>
+            <option value="Gynaecologist">Gynaecologist</option>
+            <option value="Endocrinologist">Endocrinologist (Thyroid/Diabetes)</option>
+            <option value="Cardiologist">Cardiologist</option>
+            <option value="Orthopaedist">Orthopaedist (Bones/Joints)</option>
+            <option value="Dermatologist">Dermatologist</option>
+            <option value="Psychiatrist">Psychiatrist / Counsellor</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="dateLabel">Date</label>
+          <input type="date" id="apptDate">
+        </div>
+        <div class="field">
+          <label id="timeLabel">Time (optional)</label>
+          <input type="time" id="apptTime">
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="locationLabel">Location / Hospital (optional)</label>
+        <input type="text" id="location" placeholder="e.g. Apollo Hospital, Bandra">
+      </div>
+
+      <div class="field">
+        <label id="questionsLabel">Questions to ask the doctor</label>
+        <textarea id="questions" rows="3" style="border-radius:12px;"
+          placeholder="Write down what you want to discuss — you won't forget anything important..."></textarea>
+      </div>
+
+      <div class="error-msg" id="errorBox"></div>
+      <div class="success-msg" id="successBox"></div>
+      <button class="btn-primary" id="addBtn" onclick="addAppt()">Add Appointment 🗓️</button>
+    </div>
+
+    <!-- Upcoming -->
+    <div class="card">
+      <div class="card-label" id="upcomingLabel">UPCOMING APPOINTMENTS</div>
+      <div id="upcomingList">
+        <div style="text-align:center;padding:20px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Past -->
+    <div class="card" id="pastCard" style="display:none;">
+      <div class="card-label" id="pastLabel">PAST APPOINTMENTS</div>
+      <div id="pastList"></div>
+    </div>
+
+    <!-- Tip -->
+    <div style="background:rgba(76,175,136,0.08);border:1px solid rgba(76,175,136,0.2);border-radius:14px;padding:16px;font-size:0.85rem;color:var(--text-dim);line-height:1.6;">
+      💡 <strong id="tipBold">Tip before your appointment:</strong>
+      <span id="tipText"> Write down all your symptoms, when they started, and any medicines you take. Bring your recent lab reports. Do not hesitate to ask your doctor to explain anything you do not understand.</span>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+requireAuth();
+const lang = Lang.get();
+
+document.getElementById("apptDate").min = new Date().toISOString().split("T")[0];
+
+if (lang === "hi") {
+  document.getElementById("subtitle").textContent = "आने वाले appointments track करें और doctor से क्या बात करनी है याद रखें";
+  document.getElementById("addLabel").textContent = "APPOINTMENT जोड़ें";
+  document.getElementById("docLabel").textContent = "Doctor का नाम";
+  document.getElementById("specLabel").textContent = "Speciality";
+  document.getElementById("dateLabel").textContent = "Date";
+  document.getElementById("timeLabel").textContent = "Time (optional)";
+  document.getElementById("locationLabel").textContent = "Location / Hospital (optional)";
+  document.getElementById("questionsLabel").textContent = "Doctor से क्या पूछना है?";
+  document.getElementById("questions").placeholder = "लिख लें क्या discuss करना है — कुछ भूलेंगी नहीं...";
+  document.getElementById("addBtn").textContent = "Appointment जोड़ें 🗓️";
+  document.getElementById("upcomingLabel").textContent = "UPCOMING APPOINTMENTS";
+  document.getElementById("pastLabel").textContent = "पिछले APPOINTMENTS";
+  document.getElementById("tipBold").textContent = "Appointment से पहले tip:";
+  document.getElementById("tipText").textContent = " अपने सभी symptoms लिख लें, कब से हैं, और कौन सी medicines ले रही हैं। Lab reports साथ लेकर जाएं। Doctor से कुछ भी पूछने में संकोच न करें।";
+}
+
+function daysUntil(dateStr) {
+  const apptDate = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return Math.ceil((apptDate - today) / (1000*60*60*24));
+}
+
+async function loadAppointments() {
+  const r = await apiCall("/api/appointments", { auth: true });
+  if (!r || !r.success) return;
+
+  const upEl = document.getElementById("upcomingList");
+  if (!r.upcoming || !r.upcoming.length) {
+    upEl.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-dim);">
+      <div style="font-size:3rem;margin-bottom:12px;">🗓️</div>
+      <div style="font-weight:600;">${lang==="hi"?"कोई upcoming appointment नहीं":"No upcoming appointments"}</div>
+      <div style="font-size:0.85rem;margin-top:6px;">${lang==="hi"?"ऊपर add करें":"Add one above"}</div>
+    </div>`;
+  } else {
+    upEl.innerHTML = r.upcoming.map(a => {
+      const days = daysUntil(a.appointment_date);
+      const daysText = days === 0 ? (lang==="hi"?"आज!":"Today!") : days === 1 ? (lang==="hi"?"कल":"Tomorrow") : `${days} ${lang==="hi"?"दिन बाद":"days away"}`;
+      return `
+      <div class="appt-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div class="appt-date">${a.appointment_date} ${a.appointment_time || ""}</div>
+            <div class="appt-doctor">Dr. ${a.doctor_name}</div>
+            <div class="appt-details">
+              ${a.speciality || ""} ${a.location ? "· 📍 " + a.location : ""}
+            </div>
+          </div>
+          <span class="days-badge">${daysText}</span>
+        </div>
+        ${a.questions ? `<div class="questions-preview">💬 <strong>${lang==="hi"?"Doctor से पूछना है:":"Questions for doctor:"}</strong><br>${a.questions}</div>` : ""}
+        <div class="appt-actions">
+          <button class="btn-small done" onclick="completeAppt(${a.id})">✓ ${lang==="hi"?"Done":"Done"}</button>
+          <button class="btn-small" onclick="deleteAppt(${a.id})" style="color:var(--coral)">✕ ${lang==="hi"?"हटाएं":"Remove"}</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  if (r.past && r.past.length > 0) {
+    document.getElementById("pastCard").style.display = "block";
+    document.getElementById("pastList").innerHTML = r.past.map(a => `
+      <div class="appt-card past">
+        <div class="appt-date">${a.appointment_date}</div>
+        <div class="appt-doctor">Dr. ${a.doctor_name}</div>
+        <div class="appt-details">${a.speciality || ""} ${a.location ? "· " + a.location : ""}</div>
+        ${a.notes ? `<div style="font-size:0.82rem;margin-top:6px;font-style:italic;color:var(--text-dim);">${a.notes}</div>` : ""}
+      </div>
+    `).join("");
+  }
+}
+
+async function addAppt() {
+  const docName = document.getElementById("docName").value.trim();
+  const apptDate = document.getElementById("apptDate").value;
+  if (!docName || !apptDate) {
+    showError(document.getElementById("errorBox"),
+      lang==="hi"?"Doctor का नाम और date जरूरी हैं।":"Doctor name and date are required.");
+    return;
+  }
+  const btn = document.getElementById("addBtn");
+  btn.disabled = true;
+  const r = await apiCall("/api/appointments/add", {
+    method: "POST", auth: true,
+    body: {
+      doctor_name: docName,
+      speciality: document.getElementById("speciality").value,
+      appointment_date: apptDate,
+      appointment_time: document.getElementById("apptTime").value,
+      location: document.getElementById("location").value,
+      questions: document.getElementById("questions").value,
+    }
+  });
+  if (r && r.success) {
+    showSuccess(document.getElementById("successBox"),
+      lang==="hi"?"✅ Appointment add हो गई!":"✅ Appointment added!");
+    document.getElementById("docName").value = "";
+    document.getElementById("location").value = "";
+    document.getElementById("questions").value = "";
+    document.getElementById("apptTime").value = "";
+    loadAppointments();
+  } else {
+    showError(document.getElementById("errorBox"), "Could not save. Try again.");
+  }
+  btn.disabled = false;
+}
+
+async function completeAppt(id) {
+  const notes = prompt(lang==="hi"?"Appointment के बाद कोई notes? (optional)":"Any notes after the appointment? (optional)") || "";
+  await apiCall(`/api/appointments/${id}/complete`, { method:"POST", auth:true, body:{notes} });
+  loadAppointments();
+}
+
+async function deleteAppt(id) {
+  if (!confirm(lang==="hi"?"इस appointment को हटाएं?":"Remove this appointment?")) return;
+  await apiCall(`/api/appointments/${id}/delete`, { method:"DELETE", auth:true });
+  loadAppointments();
+}
+
+function signOut() { apiCall("/api/logout",{method:"POST",auth:true}); Auth.clear(); window.location.href="index.html"; }
+loadAppointments();
+</script>
+</body>
+</html>
